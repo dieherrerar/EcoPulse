@@ -6,7 +6,7 @@ export default function Card() {
         <h6 class="card-subtitle mb-2 text-body-secondary">{}</h6>
         <p class="card-text">
           Some quick example text to build on the card title and make up the
-          bulk of the card’s content.
+          bulk of the card’s content m.
         </p>
         <a href="#" class="card-link">
           Card link
