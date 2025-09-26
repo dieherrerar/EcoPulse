@@ -1,11 +1,12 @@
 import "bootstrap/dist/css/bootstrap.min.css";
+import "./estilos_componentes.css";
 import Link from "next/link";
 
 export default function Navbar() {
   return (
-    <nav className="navbar navbar-expand-lg bg-body-tertiary">
+    <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
       <div className="container-fluid">
-        <Link className="navbar-brand" href="/">
+        <Link className="navbar-brand" href="/home">
           EcoPulse
         </Link>
         <button
@@ -22,7 +23,11 @@ export default function Navbar() {
         <div className="collapse navbar-collapse" id="navbarSupportedContent">
           <ul className="navbar-nav me-auto mb-2 mb-lg-0">
             <li className="nav-item">
-              <Link className="nav-link active" aria-current="page" href="/">
+              <Link
+                className="nav-link active"
+                aria-current="page"
+                href="/home"
+              >
                 Home
               </Link>
             </li>
@@ -37,8 +42,8 @@ export default function Navbar() {
               </Link>
             </li>
             <li className="nav-item dropdown">
-              <Link className="nav-link active" href="/admin">
-                Admin
+              <Link className="nav-link active" href="/reportes">
+                Reportes
               </Link>
             </li>
           </ul>
