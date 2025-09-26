@@ -1,0 +1,34 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+.home-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  background: linear-gradient(135deg, #9cafb2 0%, #0d3981 100%);
+}
+
+.home-title {
+  font-family: "Times New Roman", Times, serif;
+  font-size: 140px;
+  color: #fbfbfb;
+  letter-spacing: 0.1em;
+  text-shadow: 2px 2px 8px #0a0a3e;
+  margin-top: 300px;
+  text-align: center;
+  overflow-wrap: anywhere;
+  cursor: default;
+}
+.home-description {
+  font-family: "Times New Roman", Times, serif;
+  font-size: 20px;
+  color: #fbfbfb;
+  letter-spacing: 0.1em;
+  text-shadow: 2px 2px 8px #0a0a3e;
+  margin-top: 20px;
+  text-align: center;
+  cursor: default;
+}
