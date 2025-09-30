@@ -8,7 +8,8 @@
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
-  background: linear-gradient(135deg, #9cafb2 0%, #0d3981 100%);
+  padding: 2rem 1rem; /* separación desde el tope de la página */
+  background: linear-gradient(135deg, #9dbb9e 0%, #1d6d1b 100%);
 }
 
 .home-title {
@@ -31,4 +32,16 @@
   margin-top: 20px;
   text-align: center;
   cursor: default;
+}
+
+.home-container .Carousel {
+  width: 100%;
+  max-width: 1200px; /* limita el ancho si lo deseas */
+  margin-top: 1rem;
+  position: relative; /* IMPORTANT: evita position: absolute */
+  z-index: 1;
+}
+
+.home-container .Carousel .Carousel-inner {
+  position: relative; /* mantener el flujo del slide */
 }

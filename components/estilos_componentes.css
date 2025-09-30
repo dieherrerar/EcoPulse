@@ -1,0 +1,98 @@
+#carouselExampleCaptions .carousel-caption h1 {
+  font-size: 4.5rem;
+}
+
+#carouselExampleCaptions .carousel-caption h5 {
+  font-size: 2.2rem;
+}
+
+#carouselExampleCaptions .carousel-caption p {
+  font-size: 1.5rem;
+}
+#carouselExampleCaptions .ecopulse-title {
+  font-size: 4rem;
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+  letter-spacing: 0.05em;
+}
+
+#carouselExampleCaptions .ecopulse-subtitle {
+  font-size: 1.5rem;
+  color: #fff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+  margin-top: 0.5rem;
+  text-align: center;
+}
+#carouselExampleCaptions {
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  width: 95%;
+  height: 75vh;
+  min-height: 400px;
+  max-height: 900px;
+  margin: 30px auto 0 auto;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(2px);
+}
+@media (max-width: 600px) {
+  #carouselExampleCaptions {
+    width: 98%;
+    height: 38%;
+    min-height: 120px;
+    margin: 2% auto;
+  }
+}
+
+#carouselExampleCaptions .carousel-item {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+}
+
+#carouselExampleCaptions .carousel-inner {
+  height: 100%;
+  min-height: 400px;
+  max-height: 900px;
+}
+
+#carouselExampleCaptions .carousel-item img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+  max-height: 900px;
+  object-fit: cover;
+}
+
+#carouselExampleCaptions .carousel-item .carousel-img-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(rgba(0, 150, 55, 0.4), rgba(0, 150, 57, 0.2));
+  z-index: 2;
+  pointer-events: none;
+}
+
+#carouselExampleCaptions .carousel-caption {
+  position: absolute;
+  z-index: 3;
+  color: #fff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+}
+
+#carouselExampleCaptions .carousel-caption-center {
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  transform: translateY(-50px);
+}
