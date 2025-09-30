@@ -1,12 +1,18 @@
 "use client";
 
 import "bootstrap/dist/css/bootstrap.min.css";
+import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import "./estilos_componentes.css";
 import Link from "next/link";
 
 export default function Carousel() {
   return (
-    <div id="carouselExampleCaptions" className="carousel slide">
+    <div
+      id="carouselExampleCaptions"
+      className="carousel slide"
+      data-bs-ride="carousel"
+      data-bs-interval="5000"
+    >
       <div className="carousel-indicators">
         <button
           type="button"
