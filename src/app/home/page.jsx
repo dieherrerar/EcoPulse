@@ -1,13 +1,10 @@
 import React from "react";
 import "./HomePage.css";
-
+import Carousel from "../../../components/Carousel";
 const HomePage = () => {
   return (
     <div className="home-container">
-      <h1 className="home-title">Eco Pulse</h1>
-      <h6 className="home-description">
-        Monitoreo, patrones y alertas medioambientales
-      </h6>
+      <Carousel />
     </div>
   );
 };
