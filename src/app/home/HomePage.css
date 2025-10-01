@@ -1,3 +1,13 @@
+/* Centrado y margen para el texto PreguntaInicio */
+.PreguntaInicio {
+  text-align: center;
+  margin-top: 70px;
+  font-size: 3rem;
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+  letter-spacing: 0.05em;
+}
 *,
 *::before,
 *::after {
@@ -9,29 +19,6 @@
   flex-direction: column;
   min-height: 100dvh;
   padding: 2rem 1rem; /* separación desde el tope de la página */
-  background: linear-gradient(135deg, #9dbb9e 0%, #1d6d1b 100%);
-}
-
-.home-title {
-  font-family: "Times New Roman", Times, serif;
-  font-size: 140px;
-  color: #fbfbfb;
-  letter-spacing: 0.1em;
-  text-shadow: 2px 2px 8px #0a0a3e;
-  margin-top: 300px;
-  text-align: center;
-  overflow-wrap: anywhere;
-  cursor: default;
-}
-.home-description {
-  font-family: "Times New Roman", Times, serif;
-  font-size: 20px;
-  color: #fbfbfb;
-  letter-spacing: 0.1em;
-  text-shadow: 2px 2px 8px #0a0a3e;
-  margin-top: 20px;
-  text-align: center;
-  cursor: default;
 }
 
 .home-container .Carousel {
