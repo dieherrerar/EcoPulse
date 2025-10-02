@@ -19,6 +19,7 @@
   flex-direction: column;
   min-height: 100dvh;
   padding: 2rem 1rem; /* separación desde el tope de la página */
+  background: linear-gradient(135deg, #9dbb9e 0%, #1d6d1b 100%) !important;
 }
 
 .home-container .Carousel {
