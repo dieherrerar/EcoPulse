@@ -31,7 +31,32 @@ const DashboardPage: NextPage = () => {
   }, []);
 
   if (loading)
-    return <div className="container py-4">Cargando dashboard...</div>;
+    return (
+      <div
+        style={{
+          minHeight: "60vh",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <div className="spinner-ecopulse" />
+        <div
+          style={{
+            fontSize: "2rem",
+            fontWeight: "bold",
+            color: "#1e90ff",
+            marginTop: "2rem",
+            textAlign: "center",
+            letterSpacing: "1px",
+            textShadow: "0 2px 8px rgba(30,144,255,0.10)",
+          }}
+        >
+          Cargando el Dashboard Ambiental...
+        </div>
+      </div>
+    );
   if (!data)
     return (
       <div className="container py-4 text-danger">
@@ -39,7 +64,7 @@ const DashboardPage: NextPage = () => {
       </div>
     );
 
-  const { kpis, timeseries, stationData, composition, stacked } = data;
+  const { kpis, timeseries, composition, stacked } = data;
 
   return (
     <div className="container py-4">
@@ -49,16 +74,30 @@ const DashboardPage: NextPage = () => {
       <div className="row g-3 mb-3">
         <div className="col-6 col-md-3">
           <KpiCard
-            title="Alertas hoy"
-            value={kpis?.alertsToday ?? "-"}
-            subtitle="Incidentes detectados"
+            title="MP2.5 promedio hoy"
+            value={kpis?.avgPM25 ?? "-"}
+            subtitle="µg/m³"
           />
         </div>
         <div className="col-6 col-md-3">
           <KpiCard
-            title="AQI promedio 24h"
-            value={kpis?.avgAQI24h ?? "-"}
-            subtitle="Promedio últimos 24h"
+            title="Temperatura promedio"
+            value={kpis?.avgTemp ?? "-"}
+            subtitle="°C"
+          />
+        </div>
+        <div className="col-6 col-md-3">
+          <KpiCard
+            title="CO₂ máximo"
+            value={kpis?.maxCO2 ?? "-"}
+            subtitle="ppm"
+          />
+        </div>
+        <div className="col-6 col-md-3">
+          <KpiCard
+            title="Consumo total"
+            value={kpis?.totalConsumo ?? "-"}
+            subtitle="Unidades"
           />
         </div>
       </div>
@@ -66,10 +105,10 @@ const DashboardPage: NextPage = () => {
       {/* Gráficos */}
       <div className="row g-3">
         <div className="col-12 col-lg-6">
-          <LineChartComp data={timeseries} xKey="date" yKey="aqi" />
+          <LineChartComp data={timeseries} xKey="date" yKey="pm25" />
         </div>
         <div className="col-12 col-lg-6">
-          <BarChartComp data={stationData} xKey="station" yKey="value" />
+          <BarChartComp data={timeseries} xKey="date" yKey="temp" />
         </div>
 
         <div className="col-12 col-lg-6">
@@ -81,7 +120,7 @@ const DashboardPage: NextPage = () => {
             xKey="date"
             areas={[
               { key: "co2", name: "CO2" },
-              { key: "nh3", name: "NH3" },
+              { key: "consumo", name: "consumo" },
             ]}
           />
         </div>
