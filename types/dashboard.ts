@@ -1,18 +1,16 @@
 // types/dashboard.ts
 export interface KPIs {
-  alertsToday: number;
-  avgAQI24h: number;
+  avgPM25: number;
+  avgTemp: number;
+  maxCO2: number;
+  totalConsumo: number;
 }
 
 export interface TimePoint {
   date: string; // ISO date 'YYYY-MM-DD' o ISO datetime
-  aqi?: number;
+  pm25?: number;
   temp?: number;
-}
-
-export interface StationDatum {
-  station: string;
-  value: number;
+  co2?: number;
 }
 
 export interface CompositionDatum {
@@ -23,13 +21,12 @@ export interface CompositionDatum {
 export interface StackedDatum {
   date: string;
   co2?: number;
-  nh3?: number;
+  consumo?: number;
 }
 
 export interface DashboardPayload {
   kpis: KPIs;
   timeseries: TimePoint[];
-  stationData: StationDatum[];
   composition: CompositionDatum[];
   stacked: StackedDatum[];
 }
