@@ -4,8 +4,11 @@ import { query } from "@/app/lib/db";
 
 export async function GET(req: NextRequest) {
   try {
+    const { searchParams } = new URL(req.url);
+    const date = searchParams.get("date") || "2025-10-01";
     const result = await query(
-      "SELECT * FROM datos_dispositivo ORDER BY fecha_registro ASC"
+      "SELECT * FROM datos_dispositivo WHERE fecha_registro::date = $1 ORDER BY fecha_registro ASC",
+      [date]
     );
 
     const rows = result.rows;
@@ -16,25 +19,25 @@ export async function GET(req: NextRequest) {
       });
     }
 
-
     // Helper to round to 2 decimals
     const round2 = (n: number) => Math.round(n * 100) / 100;
 
     const avgPM25 = round2(
       rows.reduce((acc, row) => acc + parseFloat(row["mp25_stp"] || "0"), 0) /
-      rows.length
+        rows.length
     );
     const avgTemp = round2(
       rows.reduce((acc, row) => acc + parseFloat(row["tem_bme280"] || "0"), 0) /
-      rows.length
+        rows.length
     );
     const maxCO2 = round2(
       Math.max(...rows.map((row) => parseFloat(row["co2_mhz19"] || "0")))
     );
-    const pm10 = round2(
-      rows.reduce((acc, row) => acc + parseFloat(row["mp10_stp"] || "0"), 0) /
-      rows.length
+
+    const aguaCaida = round2(
+      rows.reduce((acc, row) => acc + parseFloat(row["agua_caida"] || "0"), 0)
     );
+
     const totalConsumo = round2(
       rows.reduce(
         (acc, row) =>
@@ -46,7 +49,7 @@ export async function GET(req: NextRequest) {
       )
     );
 
-    const kpis = { avgPM25, avgTemp, maxCO2, totalConsumo };
+    const kpis = { avgPM25, avgTemp, maxCO2, aguaCaida };
 
     const timeseries = rows.map((row) => ({
       date: row.fecha_registro,
@@ -55,10 +58,49 @@ export async function GET(req: NextRequest) {
       co2: round2(parseFloat(row["co2_mhz19"] || "0")),
     }));
 
+    const totalMP = rows.reduce(
+      (acc, row) =>
+        acc +
+        parseFloat(row["mp1.0_stp"] || "0") +
+        parseFloat(row["mp2.5_stp"] || "0") +
+        parseFloat(row["mp10_stp"] || "0"),
+      0
+    );
+
     const composition = [
-      { name: "PM2.5", value: avgPM25 },
-      { name: "PM10", value: pm10 },
-      { name: "CO2", value: maxCO2 },
+      {
+        name: "mp1.0_stp",
+        value: round2(
+          (rows.reduce(
+            (acc, row) => acc + parseFloat(row["mp1.0_stp"] || "0"),
+            0
+          ) /
+            totalMP) *
+            100
+        ),
+      },
+      {
+        name: "mp2.5_stp",
+        value: round2(
+          (rows.reduce(
+            (acc, row) => acc + parseFloat(row["mp2.5_stp"] || "0"),
+            0
+          ) /
+            totalMP) *
+            100
+        ),
+      },
+      {
+        name: "mp10_stp",
+        value: round2(
+          (rows.reduce(
+            (acc, row) => acc + parseFloat(row["mp10_stp"] || "0"),
+            0
+          ) /
+            totalMP) *
+            100
+        ),
+      },
     ];
 
     const stacked = timeseries.map((d) => ({

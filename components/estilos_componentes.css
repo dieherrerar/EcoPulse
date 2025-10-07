@@ -1,3 +1,31 @@
+/* Estilo de fuente y color para tablas del dashboard */
+.dashboard-chart-container table,
+.dashboard-chart-container th,
+.dashboard-chart-container td {
+  font-family: "Inter", "Segoe UI", Arial, sans-serif;
+  color: #184d2b;
+  font-size: 1rem;
+}
+.dashboard-chart-container th {
+  font-weight: 600;
+  background: #eafaf1;
+}
+.dashboard-chart-container td {
+  background: #fff;
+}
+/* Borde fino y sutil para los gráficos del dashboard */
+.dashboard-chart-container {
+  border: 1px solid rgba(30, 80, 60, 0.18);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 1px 6px rgba(30, 80, 60, 0.04);
+  padding: 1.2rem 1.2rem 0.7rem 1.2rem;
+  margin-bottom: 0.5rem;
+  transition: box-shadow 0.18s;
+}
+.dashboard-chart-container:hover {
+  box-shadow: 0 4px 18px rgba(30, 80, 60, 0.1);
+}
 /* Spinner for EcoPulse dashboard loading */
 .spinner-ecopulse {
   width: 60px;
@@ -10,19 +38,23 @@
 }
 
 @keyframes spin-ecopulse {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 /* Borde fino y sutil para las KPI cards */
 .Kpicard {
   border: 1px solid rgba(30, 80, 60, 0.18);
   border-radius: 14px;
   background: #fff;
-  box-shadow: 0 1px 6px rgba(30,80,60,0.04);
+  box-shadow: 0 1px 6px rgba(30, 80, 60, 0.04);
   transition: box-shadow 0.18s;
 }
 .Kpicard:hover {
-  box-shadow: 0 4px 18px rgba(30,80,60,0.10);
+  box-shadow: 0 4px 18px rgba(30, 80, 60, 0.1);
 }
 /* Navbar más alto */
 .navbar {

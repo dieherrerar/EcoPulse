@@ -17,6 +17,7 @@ interface AreaDef {
 }
 
 interface AreaChartCompProps {
+  title?: string;
   data: StackedDatum[];
   areas?: AreaDef[];
   xKey: keyof StackedDatum;
@@ -27,6 +28,7 @@ const COLORS = ["#8884d8", "#82ca9d", "#ffc658"];
 
 export default function AreaChartComp(props: AreaChartCompProps) {
   const {
+    title,
     data,
     xKey = "date",
     areas = [
@@ -37,6 +39,7 @@ export default function AreaChartComp(props: AreaChartCompProps) {
   } = props;
   return (
     <div className="area-card p-2 h-100">
+      <div className="small text-muted">{title}</div>
       <div className="area-card-body p-2">
         <ResponsiveContainer width="100%" height={height}>
           <AreaChart data={data}>

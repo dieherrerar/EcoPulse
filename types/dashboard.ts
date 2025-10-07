@@ -3,7 +3,7 @@ export interface KPIs {
   avgPM25: number;
   avgTemp: number;
   maxCO2: number;
-  totalConsumo: number;
+  aguaCaida: number;
 }
 
 export interface TimePoint {

@@ -12,6 +12,7 @@ import {
 import { CompositionDatum } from "../../types/dashboard";
 
 interface PieChartCompProps {
+  title: string;
   data: CompositionDatum[];
   nameKey?: keyof CompositionDatum;
   valueKey?: keyof CompositionDatum;
@@ -21,7 +22,13 @@ interface PieChartCompProps {
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
 
 export default function PieChartComp(props: PieChartCompProps) {
-  const { data, nameKey = "name", valueKey = "value", height = 220 } = props;
+  const {
+    title,
+    data,
+    nameKey = "name",
+    valueKey = "value",
+    height = 220,
+  } = props;
 
   const chartData = data.map((d) => ({
     [String(nameKey)]: d[nameKey as keyof CompositionDatum],
@@ -30,6 +37,7 @@ export default function PieChartComp(props: PieChartCompProps) {
 
   return (
     <div className="pie-card p-2 h-100">
+      <div className="small text-muted">{title}</div>
       <div className="pie-card-body p-2">
         <ResponsiveContainer width="100%" height={height}>
           <PieChart>
