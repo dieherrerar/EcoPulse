@@ -9,6 +9,7 @@ import PieChartComp from "../../../components/charts/PieChartComp";
 import AreaChartComp from "../../../components/charts/AreaChartComp";
 import type { DashboardPayload } from "../../../types/dashboard";
 import Table from "../../../components/Table";
+import DownloadButton from "../../../components/DownloadButton";
 import "./dashboard.css";
 
 const DashboardPage: NextPage = () => {
@@ -191,6 +192,13 @@ const DashboardPage: NextPage = () => {
             />
           </div>
         </div>
+      </div>
+
+      <div className="mb-4">
+        <DownloadButton
+          label="Extraer reporte CSV"
+          date={selectedDate} // la fecha que seleccionó el usuario
+        />
       </div>
 
       {/* Diccionario de Datos title */}
