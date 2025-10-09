@@ -206,7 +206,9 @@ const DashboardPage: NextPage = () => {
             "#fecha",
             ".dashboard-btn-blue",
             ".download-controls",
-            "#diccionario-section",
+            "#table-responsive mt-3 mb-5 dashboard-chart-container",
+            "#mt-5 mb-3",
+            "#mb-4 d-flex gap-3 flex-wrap",
           ]}
           btnClassName="dashboard-btn-blue"
         />
