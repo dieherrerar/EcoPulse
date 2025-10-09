@@ -9,14 +9,15 @@ import PieChartComp from "../../../components/charts/PieChartComp";
 import AreaChartComp from "../../../components/charts/AreaChartComp";
 import type { DashboardPayload } from "../../../types/dashboard";
 import Table from "../../../components/Table";
-import DownloadButton from "../../../components/DownloadButton";
+import DownloadButton from "../../../components/DownloadCSV";
+import DownloadPDF from "../../../components/DownloadPDF";
 import "./dashboard.css";
 
 const DashboardPage: NextPage = () => {
   const [data, setData] = useState<DashboardPayload | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [dates, setDates] = useState<string[]>([]);
-  const [selectedDate, setSelectedDate] = useState<string>("2025-10-01");
+  const [selectedDate, setSelectedDate] = useState<string>("");
   const [datosDiccionario, setDatosDiccionario] = useState<
     { variable: String; descripcion: String; rango: String }[]
   >([]);
@@ -28,7 +29,7 @@ const DashboardPage: NextPage = () => {
         const jsonr = await response.json();
         if (jsonr.success && jsonr.dates.length > 0) {
           setDates(jsonr.dates);
-          setSelectedDate(jsonr.dates[0]);
+          setSelectedDate(jsonr.dates[jsonr.dates.length - 1]); // Selecciona la última fecha
         }
       } catch (error) {
         console.error("Error fetching dates", error);
@@ -40,10 +41,12 @@ const DashboardPage: NextPage = () => {
     (async () => {
       setLoading(true);
       try {
-        const res = await fetch(`/api/dashboard-data?date=${selectedDate}`);
-        if (!res.ok) throw new Error("Error fetching dashboard data");
-        const json = (await res.json()) as DashboardPayload;
-        setData(json);
+        if (selectedDate) {
+          const res = await fetch(`/api/dashboard-data?date=${selectedDate}`);
+          if (!res.ok) throw new Error("Error fetching dashboard data");
+          const json = (await res.json()) as DashboardPayload;
+          setData(json);
+        }
       } catch (err) {
         console.error(err);
       } finally {
@@ -102,17 +105,17 @@ const DashboardPage: NextPage = () => {
     <div className="container py-4">
       <h2 className="mb-3">Dashboard Ambiental</h2>
 
-      {/* Dropdown para seleccionar fecha */}
+      {/* Dropdown para seleccionar fecha con leyenda */}
       <div className="mb-4">
-        <label htmlFor="fecha" className="form-label">
-          Selecciona fecha:
-        </label>
         <select
           id="fecha"
           className="form-select"
           value={selectedDate}
           onChange={(e) => setSelectedDate(e.target.value)}
         >
+          <option value="" disabled>
+            Selecciona fecha
+          </option>
           {dates.map((date) => {
             const formatted = new Date(date).toLocaleDateString("es-CL");
             return (
@@ -194,10 +197,18 @@ const DashboardPage: NextPage = () => {
         </div>
       </div>
 
-      <div className="mb-4">
-        <DownloadButton
-          label="Extraer reporte CSV"
-          date={selectedDate} // la fecha que seleccionó el usuario
+      <div className="mb-4 d-flex gap-3 flex-wrap">
+        <DownloadButton label="Extraer reporte CSV" date={selectedDate} />
+        <DownloadPDF
+          targetId="container py-4"
+          fileName={"eco_dashboard_" + selectedDate}
+          hideSelectors={[
+            "#fecha",
+            ".dashboard-btn-blue",
+            ".download-controls",
+            "#diccionario-section",
+          ]}
+          btnClassName="dashboard-btn-blue"
         />
       </div>
 
