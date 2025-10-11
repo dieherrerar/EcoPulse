@@ -1,0 +1,14 @@
+{
+  "feature_order": [
+    "Tem_BME280",
+    "MP1.0_AtE"
+  ],
+  "data_min_": [
+    -32.5,
+    0.0
+  ],
+  "data_max_": [
+    56.6,
+    500.0
+  ]
+}
