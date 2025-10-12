@@ -18,6 +18,7 @@ const DashboardPage: NextPage = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [dates, setDates] = useState<string[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>("");
+  const [error, setError] = useState<string | null>(null);
   const [datosDiccionario, setDatosDiccionario] = useState<
     { variable: String; descripcion: String; rango: String }[]
   >([]);
@@ -25,30 +26,38 @@ const DashboardPage: NextPage = () => {
   useEffect(() => {
     (async () => {
       try {
-        const response = await fetch("/api/dates");
+        const response = await fetch("/api/dates", { cache: "no-store" });
         const jsonr = await response.json();
         if (jsonr.success && jsonr.dates.length > 0) {
           setDates(jsonr.dates);
-          setSelectedDate(jsonr.dates[jsonr.dates.length - 1]); // Selecciona la última fecha
+          setSelectedDate(jsonr.dates[jsonr.dates.length - 1]); // última fecha
+          setError(null);
+        } else {
+          setError("No hay fechas disponibles.");
         }
-      } catch (error) {
-        console.error("Error fetching dates", error);
+      } catch (err) {
+        setError("Error obteniendo fechas.");
+      } finally {
+        // ¡OJO! No ponemos loading=false aquí todavía; dejamos que lo maneje el fetch de datos
       }
     })();
   }, []);
 
   useEffect(() => {
     (async () => {
+      if (!selectedDate) return; // evita setLoading(false) prematuro
       setLoading(true);
+      setError(null);
       try {
-        if (selectedDate) {
-          const res = await fetch(`/api/dashboard-data?date=${selectedDate}`);
-          if (!res.ok) throw new Error("Error fetching dashboard data");
-          const json = (await res.json()) as DashboardPayload;
-          setData(json);
-        }
-      } catch (err) {
-        console.error(err);
+        const res = await fetch(`/api/dashboard-data?date=${selectedDate}`, {
+          cache: "no-store",
+        });
+        if (!res.ok) throw new Error("No se pudo obtener el dashboard");
+        const json = (await res.json()) as DashboardPayload;
+        setData(json);
+      } catch (err: any) {
+        setError(err?.message || "Error cargando los datos del dashboard.");
+        setData(null);
       } finally {
         setLoading(false);
       }

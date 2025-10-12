@@ -50,6 +50,11 @@ export default function Navbar() {
                 Reportes
               </Link>
             </li>
+            <li className="nav-item dropdown">
+              <Link className="nav-link active" href="/clustering">
+                Clustering
+              </Link>
+            </li>
           </ul>
         </div>
       </div>
