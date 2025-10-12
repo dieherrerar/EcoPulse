@@ -19,7 +19,7 @@ const DashboardPage: NextPage = () => {
   const [dates, setDates] = useState<string[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [datosDiccionario, setDatosDiccionario] = useState<
-    { variable: String; descripcion: String; rango: String }[]
+    { variable: string; descripcion: string; rango: string }[]
   >([]);
 
   useEffect(() => {
