@@ -12,6 +12,13 @@ import Table from "../../../components/Table";
 import DownloadButton from "../../../components/DownloadCSV";
 import DownloadPDF from "../../../components/DownloadPDF";
 import "./dashboard.css";
+import dynamic from "next/dynamic";
+
+// ⬇️ Listener de alertas (SSE) solo en cliente
+const AlertsSSEListener = dynamic(
+  () => import("../../../components/AlertsSSEListener"),
+  { ssr: false }
+);
 
 const DashboardPage: NextPage = () => {
   const [data, setData] = useState<DashboardPayload | null>(null);
@@ -20,7 +27,7 @@ const DashboardPage: NextPage = () => {
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [datosDiccionario, setDatosDiccionario] = useState<
-    { variable: String; descripcion: String; rango: String }[]
+    { variable: string; descripcion: string; rango: string }[]
   >([]);
 
   useEffect(() => {
@@ -228,7 +235,12 @@ const DashboardPage: NextPage = () => {
       <div className="table-responsive mt-3 mb-5 dashboard-chart-container">
         <Table datos={datosDiccionario} />
       </div>
+
+    {/* 🔔 Listener: abre el modal cuando el backend lo indique */}
+      <AlertsSSEListener />
+
     </div>
+
   );
 };
 
