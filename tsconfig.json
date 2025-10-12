@@ -19,14 +19,14 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/": ["./src/"]
     }
   },
   "include": [
     "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts",
+    "/*.ts",
+    "/.tsx",
+    ".next/types/**/.ts",
     "src/app/layout.jsx",
     "src/app/dashboard/page.tsx",
     "src/app/home/page.jsx",
