@@ -48,14 +48,20 @@ export async function GET() {
       // suscripción y heartbeat
       // `on` está tipado en pg; `removeListener` existe para limpiar
       client.on("notification", onNotify);
-      hb = setInterval(() => controller.enqueue(encoder.encode(":\n\n")), 15000);
+      hb = setInterval(
+        () => controller.enqueue(encoder.encode(":\n\n")),
+        15000
+      );
     },
 
     cancel() {
       // limpiar listeners y recursos
       if (hb) clearInterval(hb);
       // @ts-expect-error: la firma de tipos de pg permite removeListener
-      client.removeListener("notification", (onNotify as unknown) as (...args: unknown[]) => void);
+      client.removeListener(
+        "notification",
+        onNotify as unknown as (...args: unknown[]) => void
+      );
       client.release();
     },
   });

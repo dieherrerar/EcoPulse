@@ -46,11 +46,6 @@ export default function Navbar() {
               </Link>
             </li>
             <li className="nav-item dropdown">
-              <Link className="nav-link active" href="/reportes">
-                Reportes
-              </Link>
-            </li>
-            <li className="nav-item dropdown">
               <Link className="nav-link active" href="/clustering">
                 Clustering
               </Link>

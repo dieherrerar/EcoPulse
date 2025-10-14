@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { query } from "@/app/lib/db";
+import { query } from "../../lib/db";
 
 function csvEscape(value: any): String {
   if (value == null || value == undefined) return "";
