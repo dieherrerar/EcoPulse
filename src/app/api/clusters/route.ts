@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
-import { query } from "@/app/lib/db";
-import scalerParams from "@/app/data/scaler_minmax.json";
-import centroidsScaled from "@/app/data/centroides_scaled.json";
+import { query } from "../../lib/db";
+import scalerParams from "../../data/scaler_minmax.json";
+import centroidsScaled from "../../data/centroides_scaled.json";
 import {
   MinMaxParams,
   ScaledCentroid,
   minMaxScale,
   minMaxInverse,
   assignClusterScaled,
-} from "@/app/lib/clustering";
+} from "../../lib/clustering";
 
 type Row = {
   tem_BME280: number | null;

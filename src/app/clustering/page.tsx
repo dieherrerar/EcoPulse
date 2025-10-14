@@ -5,6 +5,8 @@ import ClusterScatter, {
   Centroid,
 } from "../../../components/charts/ClusterScatter";
 
+const POLL_MS = 120_000;
+
 export default function ClusterrPage() {
   const [dates, setDates] = useState<string[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>("");
@@ -51,6 +53,27 @@ export default function ClusterrPage() {
         setLoading(false);
       }
     })();
+  }, [selectedDate]);
+
+  useEffect(() => {
+    if (!selectedDate) return;
+
+    const id = setInterval(async () => {
+      try {
+        const r = await fetch(`/api/clusters?date=${selectedDate}`, {
+          cache: "no-store",
+        });
+        const j = await r.json();
+        if (r.ok) {
+          setPoints(j.points ?? []);
+          setCentroids(j.centroids ?? []);
+        }
+      } catch (err) {
+        console.warn("Error actualizando clusters:", err);
+      }
+    }, POLL_MS);
+
+    return () => clearInterval(id);
   }, [selectedDate]);
 
   return (

@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 import { DashboardPayload } from "../../../../types/dashboard";
-import { query } from "@/app/lib/db";
+import { query } from "../../lib/db";
 
 export async function GET(req: NextRequest) {
   try {
@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
     const round2 = (n: number) => Math.round(n * 100) / 100;
 
     const avgPM25 = round2(
-      rows.reduce((acc, row) => acc + parseFloat(row["mp25_stp"] || "0"), 0) /
+      rows.reduce((acc, row) => acc + parseFloat(row["mp2.5_stp"] || "0"), 0) /
         rows.length
     );
     const avgTemp = round2(

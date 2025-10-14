@@ -5,8 +5,8 @@ import Card from "../../../components/CardHome";
 const HomePage = () => {
   return (
     <div
-    className="home-container"
-    style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}
+      className="home-container"
+      style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}
     >
       <Carousel />
       <h1 className="PreguntaInicio">¿Qué encontrarás acá?</h1>
@@ -20,7 +20,7 @@ const HomePage = () => {
         <Card
           title={"Generación de Reportes"}
           description={
-            "Podrás generar reportes en formato PDF con los datos recolectados y los patrones detectados."
+            "Podrás generar reportes en formato PDF del dashboard y en formato CSV de los datos recolectados en un día específico."
           }
         />
         <Card

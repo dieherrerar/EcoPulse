@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import type { NextPage } from "next";
 import KpiCard from "../../../components/KpiCard";
 import LineChartComp from "../../../components/charts/LineChartComp";
@@ -20,6 +20,8 @@ const AlertsSSEListener = dynamic(
   { ssr: false }
 );
 
+const POLL_MS = 120_000; //2 minutos
+
 const DashboardPage: NextPage = () => {
   const [data, setData] = useState<DashboardPayload | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -30,6 +32,9 @@ const DashboardPage: NextPage = () => {
     { variable: string; descripcion: string; rango: string }[]
   >([]);
 
+  const inFlight = useRef<AbortController | null>(null);
+
+  //cargar fechas desde la BD
   useEffect(() => {
     (async () => {
       try {
@@ -50,6 +55,7 @@ const DashboardPage: NextPage = () => {
     })();
   }, []);
 
+  //cargar los datos al dashboard segun la fecha seleccionada
   useEffect(() => {
     (async () => {
       if (!selectedDate) return; // evita setLoading(false) prematuro
@@ -71,6 +77,28 @@ const DashboardPage: NextPage = () => {
     })();
   }, [selectedDate]);
 
+  //Polling automatico cada 2 minutos
+  useEffect(() => {
+    if (!selectedDate) return;
+
+    const intervalID = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/dashboard-data?date=${selectedDate}`, {
+          cache: "no-store",
+        });
+        if (res.ok) {
+          const json = (await res.json()) as DashboardPayload;
+          setData(json);
+        }
+      } catch (err) {
+        console.error("Error actualizando dashboard: ", err);
+      }
+    }, POLL_MS);
+
+    return () => clearInterval(intervalID);
+  }, [selectedDate]);
+
+  //Diccionario de datos
   useEffect(() => {
     (async () => {
       const resp = await fetch("api/diccionario-datos");
@@ -236,11 +264,9 @@ const DashboardPage: NextPage = () => {
         <Table datos={datosDiccionario} />
       </div>
 
-    {/* 🔔 Listener: abre el modal cuando el backend lo indique */}
+      {/* 🔔 Listener: abre el modal cuando el backend lo indique */}
       <AlertsSSEListener />
-
     </div>
-
   );
 };
 
