@@ -5,8 +5,7 @@ export interface Measurement {
   variable: string;      // "temperatura" | "lluvia" | "pm25" | "pm10" | "co2" | "viento" | "viento_sostenido" | "granizo" | ...
   value: number;         // valor de la medición
   ts: Date;              // timestamp de la medición
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  meta?: Record<string, any>; // flags adicionales (ej. "bad_read": true, "hail": true)
+  meta?: Record<string, unknown>; // flags adicionales (ej. "bad_read": true, "hail": true)
 }
 
 export interface AlertCandidate {
@@ -16,8 +15,7 @@ export interface AlertCandidate {
   message: string;
   threshold?: number;
   open_modal?: boolean;       // si el frontend debe abrir modal
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  meta?: Record<string, any>;
+  meta?: Record<string, unknown>;
 }
 
 // Parámetros afinables (edítalos según tu realidad/sensores)
@@ -26,7 +24,7 @@ export const TH = {
   rain: { critDailyMM: 80 },
   pm:   { preEmerg: 1, emerg: 2 },   // PLACEHOLDER: usa tu índice/umbral local (p.ej., 24h µg/m3 categorizado externamente)
   co2:  { deltaPPM: 150, zScore: 3 },// delta o z-score sobre ventana (elige uno)
-  wind: { galeGust: 20, hurricaneSustainedKmh: 119 }, // 119 km/h ≈ huracán Saffir–Simpson Cat 1
+  wind: { galeGust: 20, /* m/s */ hurricaneSustainedKmh: 119 /* km/h */}, // 119 km/h ≈ huracán Saffir–Simpson Cat 1
   hotWave: { days: 3, minTemp: 33 }, // Olas de calor = ≥ minTemp por N días (ajusta)
 };
 
@@ -43,7 +41,7 @@ export const RULES: Record<number, { nombre: string; run: RuleFn }> = {
   1: {
     nombre: "error de lectura (Sensor)",
     run: async (m) => {
-      const bad = m.meta?.bad_read || Number.isNaN(m.value);
+      const bad = (m.meta as Record<string, unknown> | undefined)?.bad_read || Number.isNaN(m.value);
       if (!bad) return null;
       return {
         catalog_id: 1, nombre_alerta: "error de lectura (Sensor)",
@@ -90,7 +88,7 @@ export const RULES: Record<number, { nombre: string; run: RuleFn }> = {
       if (m.value <= 0 && m.value >= TH.temp.rangeLowMin) {
         return {
           catalog_id: 4, nombre_alerta: "Frío de entre 0° y -4°",
-          level: "warning", message: `Temperatura entre 0° y ${TH.temp.rangeLowMin}°C`, threshold: 0,
+          level: "warning", message: `Temperatura entre ${TH.temp.rangeLowMin}°C y 0°C (incl.)`, threshold: 0,
         };
       }
       return null;
@@ -100,7 +98,7 @@ export const RULES: Record<number, { nombre: string; run: RuleFn }> = {
     nombre: "Calor entre 33° y 36°",
     run: async (m) => {
       if (m.variable !== "temperatura") return null;
-      if (m.value >= TH.temp.warnHighLo && m.value < TH.temp.warnHighHi) {
+      if (m.value >= TH.temp.warnHighLo && m.value < 37) {
         return {
           catalog_id: 5, nombre_alerta: "Calor entre 33° y 36°",
           level: "warning", message: `Temperatura ${m.value.toFixed(1)}°C (33–36)`, threshold: TH.temp.warnHighLo,
@@ -185,7 +183,7 @@ export const RULES: Record<number, { nombre: string; run: RuleFn }> = {
   11: {
     nombre: "Ventiscas y/o Granizos",
     run: async (m) => {
-      const hail = !!m.meta?.hail;
+      const hail = Boolean((m.meta as Record<string, unknown> | undefined)?.hail);
       const gust = m.variable === "viento" && m.value >= TH.wind.galeGust;
       if (hail || gust) {
         return {
@@ -243,16 +241,83 @@ export const RULES: Record<number, { nombre: string; run: RuleFn }> = {
   },
 };
 
-// Evaluador único: corre todas las reglas relevantes según variable/ctx
+// Mapa por variable: solo ejecuta reglas relevantes
+const RULES_BY_VAR: Record<string, number[]> = {
+  temperatura: [4, 5, 8, 9, 12],
+  lluvia: [10],
+  pm25: [6, 13],
+  pm10: [6, 13],
+  co2: [7],
+  viento: [11],
+  viento_sostenido: [14],
+  "*": [1, 2, 3], // reglas que se ejecutan siempre
+};
+
+// Evaluador: corre reglas según variable/ctx
 export async function evaluateMeasurement(
   m: Measurement,
   ctx: Parameters<RuleFn>[1]
 ): Promise<AlertCandidate[]> {
+  const ids = [...(RULES_BY_VAR[m.variable] ?? []), ...(RULES_BY_VAR["*"] ?? [])];
   const out: AlertCandidate[] = [];
-  for (const id of Object.keys(RULES)) {
-    const n = Number(id);
-    const hit = await RULES[n].run(m, ctx);
+  for (const id of ids) {
+    const hit = await RULES[id].run(m, ctx);
     if (hit) out.push(hit);
   }
   return out;
+}
+
+// Clave única para evitar duplicados
+export function alertKey(a: AlertCandidate, m: Measurement) {
+  return `${a.catalog_id}:${m.sensor_id}:${m.variable}:${a.level}`;
+}
+
+/**
+ * Persistencia con deduplicación por ventana temporal.
+ * Inyecta tu función `query` de DB y un publicador opcional (Redis/NOTIFY).
+ */
+export async function persistAlertsForMeasurement(
+  m: Measurement,
+  ctx: Parameters<RuleFn>[1],
+  deps: {
+    // query: tu ejecutor SQL (pg, drizzle, prisma.$queryRaw, etc.)
+    query: <T = unknown>(sql: string, params?: unknown[]) => Promise<T[]>;
+    // publish opcional: enviar a SSE/pubsub `{ alert, open_modal }`
+    publish?: (payload: { alert: unknown; open_modal: boolean }) => Promise<void> | void;
+    // ventana para dedupe (minutos)
+    dedupeMinutes?: number;
+  }
+) {
+  const hits = await evaluateMeasurement(m, ctx);
+  const dedupe = Math.max(1, deps.dedupeMinutes ?? 5); // default 5 min
+
+  for (const a of hits) {
+    // 1) ¿Existe una alerta similar y reciente abierta?
+    const exists = await deps.query<{ n: number }>(
+      `SELECT COUNT(*)::int AS n
+       FROM alerts
+       WHERE status = 'open'
+         AND catalog_id = $1
+         AND sensor_id  = $2
+         AND variable   = $3
+         AND level      = $4
+         AND created_at >= now() - ($5||' minutes')::interval`,
+      [a.catalog_id, m.sensor_id, m.variable, a.level, dedupe]
+    );
+    if ((exists[0]?.n ?? 0) > 0) continue;
+
+    // 2) Insertar alerta
+    const inserted = await deps.query(
+      `INSERT INTO alerts (catalog_id, sensor_id, variable, level, message, value, threshold, status, meta)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,'open',$8)
+       RETURNING *`,
+      [a.catalog_id, m.sensor_id, m.variable, a.level, a.message, m.value, a.threshold ?? null, a.meta ?? {}]
+    );
+    const row = inserted[0];
+
+    // 3) Publicar a SSE/pubsub si corresponde
+    if (deps.publish) {
+      await deps.publish({ alert: row, open_modal: a.open_modal === true });
+    }
+  }
 }
