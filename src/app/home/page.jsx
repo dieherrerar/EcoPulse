@@ -1,6 +1,7 @@
 import React from "react";
 import "./HomePage.css";
-import Carousel from "../../../components/Carousel";
+import dynamic from "next/dynamic";
+const Carousel = dynamic(() => import("../../../components/Carousel"), { ssr: false });
 import Card from "../../../components/CardHome";
 const HomePage = () => {
   return (
