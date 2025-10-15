@@ -7,7 +7,10 @@ import LineChartComp from "../../../components/charts/LineChartComp";
 import BarChartComp from "../../../components/charts/BarChartComp";
 import PieChartComp from "../../../components/charts/PieChartComp";
 import AreaChartComp from "../../../components/charts/AreaChartComp";
-import type { DashboardPayload } from "../../../types/dashboard";
+import type {
+  CompositionDatum,
+  DashboardPayload,
+} from "../../../types/dashboard";
 import Table from "../../../components/Table";
 import DownloadButton from "../../../components/DownloadCSV";
 import DownloadPDF from "../../../components/DownloadPDF";
@@ -109,6 +112,13 @@ const DashboardPage: NextPage = () => {
     })();
   }, []);
 
+  const avg = data?.kpis?.avgPM10 ?? 0;
+
+  const pm25Bars: CompositionDatum[] = [
+    { name: "Promedio del día", value: avg },
+    { name: "Límite OMS 24 h", value: 130 },
+  ];
+
   if (loading)
     return (
       <div
@@ -175,7 +185,7 @@ const DashboardPage: NextPage = () => {
       <div className="row g-3 mb-3">
         <div className="col-6 col-md-3">
           <KpiCard
-            title="MP2.5 promedio hoy"
+            title="MP2.5_ATE promedio hoy"
             value={kpis?.avgPM25 ?? "-"}
             subtitle="µg/m³"
           />
@@ -207,12 +217,23 @@ const DashboardPage: NextPage = () => {
       <div className="row g-3">
         <div className="col-12 col-lg-6">
           <div className="dashboard-chart-container">
-            <LineChartComp data={timeseries} xKey="date" yKey="pm25" />
+            <LineChartComp
+              data={data.tempCo2Trend}
+              xKey="tempBin"
+              yKey="co2"
+              xType="number"
+              title={`Relación CO₂ vs Temperatura`}
+              xLabel="Temperatura (°C)"
+              yLabel="CO₂ (ppm)"
+            />
           </div>
         </div>
         <div className="col-12 col-lg-6">
           <div className="dashboard-chart-container">
-            <BarChartComp data={timeseries} xKey="date" yKey="temp" />
+            <BarChartComp
+              data={pm25Bars}
+              title={`PM promedio del día vs límite OMS`}
+            />
           </div>
         </div>
 

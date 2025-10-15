@@ -23,7 +23,11 @@ export async function GET(req: NextRequest) {
     const round2 = (n: number) => Math.round(n * 100) / 100;
 
     const avgPM25 = round2(
-      rows.reduce((acc, row) => acc + parseFloat(row["mp2.5_stp"] || "0"), 0) /
+      rows.reduce((acc, row) => acc + parseFloat(row["mp2.5_ate"] || "0"), 0) /
+        rows.length
+    );
+    const avgPM10 = round2(
+      rows.reduce((acc, row) => acc + parseFloat(row["mp10_ate"] || "0"), 0) /
         rows.length
     );
     const avgTemp = round2(
@@ -49,7 +53,7 @@ export async function GET(req: NextRequest) {
       )
     );
 
-    const kpis = { avgPM25, avgTemp, maxCO2, aguaCaida };
+    const kpis = { avgPM25, avgPM10, avgTemp, maxCO2, aguaCaida };
 
     const timeseries = rows.map((row) => ({
       date: row.fecha_registro,
@@ -61,18 +65,18 @@ export async function GET(req: NextRequest) {
     const totalMP = rows.reduce(
       (acc, row) =>
         acc +
-        parseFloat(row["mp1.0_stp"] || "0") +
-        parseFloat(row["mp2.5_stp"] || "0") +
-        parseFloat(row["mp10_stp"] || "0"),
+        parseFloat(row["mp1.0_ate"] || "0") +
+        parseFloat(row["mp2.5_ate"] || "0") +
+        parseFloat(row["mp10_ate"] || "0"),
       0
     );
 
     const composition = [
       {
-        name: "mp1.0_stp",
+        name: "mp1.0_ate",
         value: round2(
           (rows.reduce(
-            (acc, row) => acc + parseFloat(row["mp1.0_stp"] || "0"),
+            (acc, row) => acc + parseFloat(row["mp1.0_ate"] || "0"),
             0
           ) /
             totalMP) *
@@ -80,10 +84,10 @@ export async function GET(req: NextRequest) {
         ),
       },
       {
-        name: "mp2.5_stp",
+        name: "mp2.5_ate",
         value: round2(
           (rows.reduce(
-            (acc, row) => acc + parseFloat(row["mp2.5_stp"] || "0"),
+            (acc, row) => acc + parseFloat(row["mp2.5_ate"] || "0"),
             0
           ) /
             totalMP) *
@@ -91,10 +95,10 @@ export async function GET(req: NextRequest) {
         ),
       },
       {
-        name: "mp10_stp",
+        name: "mp10_ate",
         value: round2(
           (rows.reduce(
-            (acc, row) => acc + parseFloat(row["mp10_stp"] || "0"),
+            (acc, row) => acc + parseFloat(row["mp10_ate"] || "0"),
             0
           ) /
             totalMP) *
@@ -102,6 +106,28 @@ export async function GET(req: NextRequest) {
         ),
       },
     ];
+
+    const tempBins = await query(
+      `SELECT
+          FLOOR(("tem_bme280")::numeric) AS temp_bin,
+          AVG(("co2_mhz19")::numeric)    AS avg_co2,
+          COUNT(*)                       AS n
+        FROM datos_dispositivo
+        WHERE fecha_registro::date = $1
+          AND ("tem_bme280") IS NOT NULL
+          AND ("co2_mhz19") IS NOT NULL
+        GROUP BY 1
+        ORDER BY 1`,
+      [date]
+    );
+
+    const tempRows = tempBins.rows;
+
+    const tempCo2Trend = tempRows.map((t: any) => ({
+      tempBin: Number(t.temp_bin),
+      co2: round2(parseFloat(t.avg_co2 || "0")),
+      count: Number(t.n),
+    }));
 
     const stacked = timeseries.map((d) => ({
       date: d.date,
@@ -114,6 +140,7 @@ export async function GET(req: NextRequest) {
       timeseries,
       composition,
       stacked,
+      tempCo2Trend,
     };
 
     return new Response(JSON.stringify(payload), {
