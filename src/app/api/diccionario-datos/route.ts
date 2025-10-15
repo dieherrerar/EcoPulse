@@ -3,12 +3,12 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
-    const result = await query("SELECT * FROM diccionario_datos;");
+    const result = await query("SELECT * FROM diccionario_dato;");
 
     const datos = result.rows.map((row) => ({
-      variable: row.variable,
-      descripcion: row.descripcion,
-      rango: row.rango_observado,
+      variable: row.nombre_variable,
+      descripcion: row.descripcion_variable,
+      rango: row.rango_variable,
     }));
 
     return NextResponse.json({ success: true, datos });

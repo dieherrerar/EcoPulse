@@ -2,6 +2,7 @@
 export interface KPIs {
   avgPM25: number;
   avgTemp: number;
+  avgPM10: number;
   maxCO2: number;
   aguaCaida: number;
 }
@@ -24,9 +25,16 @@ export interface StackedDatum {
   consumo?: number;
 }
 
+export interface TempCo2Point {
+  tempBin: number;
+  co2: number;
+  count: number;
+}
+
 export interface DashboardPayload {
   kpis: KPIs;
   timeseries: TimePoint[];
   composition: CompositionDatum[];
   stacked: StackedDatum[];
+  tempCo2Trend: TempCo2Point[];
 }
