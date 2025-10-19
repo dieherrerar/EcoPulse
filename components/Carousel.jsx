@@ -1,11 +1,16 @@
 "use client";
 
+import { useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
-import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import "./estilos_componentes.css";
 import Link from "next/link";
 
 export default function Carousel() {
+  useEffect(() => {
+    // Importar Bootstrap JS solo en el cliente
+    import("bootstrap/dist/js/bootstrap.bundle.min.js");
+  }, []);
+
   return (
     <div
       id="carouselExampleCaptions"
