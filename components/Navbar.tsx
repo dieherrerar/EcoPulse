@@ -1,8 +1,35 @@
+"use client";
+
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./estilos_componentes.css";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
+import { color } from "framer-motion";
 
 export default function Navbar() {
+  const router = useRouter();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    async function checkAuth() {
+      try {
+        const res = await fetch("/api/auth/validate", { cache: "no-store" });
+        const j = await res.json();
+        setIsAdmin(j?.valid === true);
+      } catch {
+        setIsAdmin(false);
+      }
+    }
+    checkAuth();
+  }, []);
+
+  const handleLogout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    setIsAdmin(false);
+    router.push("/admin");
+  };
+
   return (
     <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
       <div className="container-fluid">
@@ -50,6 +77,18 @@ export default function Navbar() {
                 Clustering
               </Link>
             </li>
+            {isAdmin && (
+              <li className="nav-item dropdown">
+                <Link
+                  className="nav-link active"
+                  onClick={handleLogout}
+                  href="#"
+                  style={{ color: "red" }}
+                >
+                  Logout
+                </Link>
+              </li>
+            )}
           </ul>
         </div>
       </div>
