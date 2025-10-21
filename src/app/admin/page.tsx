@@ -31,7 +31,7 @@ export default function Admin() {
         return;
       }
       setTimeout(() => {
-        window.location.assign("/admin/settings");
+        window.location.assign("/home");
       }, 0);
     } catch (e: any) {
       setErr(e?.message || "Error realizando login");

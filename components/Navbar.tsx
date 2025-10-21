@@ -80,7 +80,7 @@ export default function Navbar() {
             {isAdmin && (
               <li className="nav-item dropdown">
                 <Link
-                  className="nav-link active"
+                  className="nav-link active logout-link"
                   onClick={handleLogout}
                   href="#"
                   style={{ color: "red" }}

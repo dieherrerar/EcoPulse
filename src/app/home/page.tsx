@@ -2,12 +2,22 @@ import React from "react";
 import "./HomePage.css";
 import Carousel from "../../../components/Carousel";
 import Card from "../../../components/CardHome";
-const HomePage = () => {
+import { checkAuth } from "../lib/checkAuth";
+
+export default async function HomePage() {
+  const { valid, user } = await checkAuth();
+
   return (
     <div
       className="home-container"
       style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}
     >
+      {valid ? (
+        <p className="welcome-admin">👋 Bienvenido, {user?.name}</p>
+      ) : (
+        <p></p>
+      )}
+
       <Carousel />
       <h1 className="PreguntaInicio">¿Qué encontrarás acá?</h1>
       <div className="cards-container">
@@ -38,6 +48,4 @@ const HomePage = () => {
       </div>
     </div>
   );
-};
-
-export default HomePage;
+}

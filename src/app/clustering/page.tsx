@@ -4,6 +4,8 @@ import ClusterScatter, {
   Point,
   Centroid,
 } from "../../../components/charts/ClusterScatter";
+import DownloadPDF from "../../../components/DownloadPDF";
+import { div } from "framer-motion/client";
 
 const POLL_MS = 120_000;
 
@@ -77,37 +79,51 @@ export default function ClusterrPage() {
   }, [selectedDate]);
 
   return (
-    <div className="container py-4" id="cluster-root">
-      {/* Título con misma jerarquía visual */}
-      <h2 className="mb-3">
-        Patrones Ambientales Detectados (Clusters y Centroides)
-      </h2>
+    <div>
+      <div className="container py-4" id="cluster-root">
+        {/* Título con misma jerarquía visual */}
+        <h2 className="mb-3">
+          Patrones Ambientales Detectados (Clusters y Centroides)
+        </h2>
 
-      {/* Selector de fecha con el mismo estilo del dashboard */}
-      <div className="mb-4">
-        <select
-          id="fecha"
-          className="form-select"
-          value={selectedDate}
-          onChange={(e) => setSelectedDate(e.target.value)}
-        >
-          <option value="" disabled>
-            Selecciona fecha
-          </option>
-          {dates.map((date) => {
-            const formatted = new Date(date).toLocaleDateString("es-CL");
-            return (
-              <option key={date} value={date}>
-                {formatted}
-              </option>
-            );
-          })}
-        </select>
+        {/* Selector de fecha con el mismo estilo del dashboard */}
+        <div className="mb-4">
+          <select
+            id="fecha"
+            className="form-select"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+          >
+            <option value="" disabled>
+              Selecciona fecha
+            </option>
+            {dates.map((date) => {
+              const formatted = new Date(date).toLocaleDateString("es-CL");
+              return (
+                <option key={date} value={date}>
+                  {formatted}
+                </option>
+              );
+            })}
+          </select>
+        </div>
+
+        {/* Gráfico dentro del mismo contenedor estilizado */}
+        <div className="dashboard-chart-container">
+          <ClusterScatter points={points} centroids={centroids} />
+        </div>
       </div>
-
-      {/* Gráfico dentro del mismo contenedor estilizado */}
-      <div className="dashboard-chart-container">
-        <ClusterScatter points={points} centroids={centroids} />
+      <div id="ButtonPDF" className="mb-4">
+        <div className="container">
+          <div className="d-flex gap-3 flex-wrap">
+            <DownloadPDF
+              targetId="container py-4"
+              fileName={"eco_clustering" + selectedDate}
+              hideSelectors={["#fecha", "#ButtonPDF"]}
+              btnClassName="dashboard-btn-blue"
+            />
+          </div>
+        </div>
       </div>
     </div>
   );

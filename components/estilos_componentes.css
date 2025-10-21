@@ -258,6 +258,60 @@
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
 }
 
+/* Fix mobile navbar collapse overlay: opaque background and high z-index */
+@media (max-width: 991px) {
+  .navbar {
+    position: relative;
+    z-index: 2200; /* ensure navbar sits above page content */
+  }
+
+  /* Make the collapsed menu an overlay with solid/dark background so it's visible */
+  .navbar .navbar-collapse {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: rgba(13, 13, 13, 0.96); /* almost solid to avoid transparency */
+    padding: 0.75rem 1rem;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    z-index: 2199;
+  }
+
+  .navbar .navbar-nav {
+    width: 100%;
+  }
+
+  .navbar .navbar-nav .nav-link {
+    color: #fff !important;
+    padding: 0.75rem 0.5rem;
+    display: block;
+  }
+
+  /* Ensure logout link stays red even when other rules try to override color */
+  .navbar .logout-link,
+  .navbar .logout-link:link,
+  .navbar .logout-link:visited,
+  .navbar .logout-link:hover,
+  .navbar .logout-link:active {
+    color: #ff3b3b !important;
+    font-weight: 700;
+  }
+
+  /* Ensure toggler sits above the collapse when animating */
+  .navbar .navbar-toggler {
+    z-index: 2201;
+  }
+
+  /* Dropdown menus inside navbar should also be visible above content */
+  .navbar .dropdown-menu {
+    position: static; /* flow inside the collapse */
+    background: transparent;
+    box-shadow: none;
+  }
+}
+
 #carouselExampleCaptions .carousel-caption-center {
   top: 0;
   left: 0;

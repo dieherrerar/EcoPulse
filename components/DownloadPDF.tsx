@@ -15,7 +15,7 @@ interface PropsWithClass extends Props {
 
 export default function DownloadPDF({
   targetId,
-  fileName = "dashboard",
+  fileName,
   btnClassName = "btn btn-primary",
   hideSelectors = [],
 }: PropsWithClass) {
@@ -67,7 +67,7 @@ export default function DownloadPDF({
       onClick={handleDownload}
       disabled={loading}
     >
-      {loading ? "Generando PDF..." : "Descargar PDF"}
+      {loading ? "Generando PDF..." : "Exportar a PDF"}
     </button>
   );
 }

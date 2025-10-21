@@ -43,6 +43,7 @@ export async function POST(req: Request) {
     }
 
     const token = await signAuthToken({
+      name: u.nombre_usuario,
       sub: String(u.id_usuario),
       email: u.correo_usuario,
       role: "admin",

@@ -5,6 +5,7 @@ const ISSUER = "ecopulse_auth";
 const AUD = "ecopulse-app";
 
 export type JWTPayload = {
+  name: string;
   sub: string;
   email: string;
   role: string;
