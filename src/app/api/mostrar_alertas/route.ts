@@ -19,12 +19,14 @@ export async function GET() {
   try {
     const { rows } = await pool.query(`
       SELECT
-        d.id_dato_dispositivo,
         a.nombre_alerta,
+        t.nivel_alerta AS tipo_alerta,                               -- 👈 NUEVO
         to_char(d.fecha_hora_alerta, 'YYYY-MM-DD HH24:MI:SS') AS fecha_hora_alerta,
-        d.valor_anomalo::text AS valor_anomalo
+        d.valor_anomalo::text AS valor_anomalo,
+        d.columnas_afectadas
       FROM public.detalle_alerta d
-      JOIN public.alerta a ON d.id_alerta = a.id_alerta
+      JOIN public.alerta a       ON d.id_alerta = a.id_alerta
+      JOIN public.tipo_alerta t  ON a.id_tipo_alerta = t.id_tipo_alerta   -- 👈 NUEVO
       ORDER BY d.fecha_hora_alerta DESC
       LIMIT 20;
     `);
