@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./estilos_componentes.css";

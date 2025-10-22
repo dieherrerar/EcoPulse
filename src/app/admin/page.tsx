@@ -1,16 +1,45 @@
 "use client";
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Admin() {
-  const [form, setForm] = useState({ email: "", password: "", rut: "" });
-  const handleChange = (e) => {
+  const [form, setForm] = useState({ email: "", password: "" });
+  const [err, setErr] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
-  const handleSubmit = (e) => {
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Aquí iría la lógica de autenticación
-    alert("Login enviado: " + JSON.stringify(form));
+    setErr(null);
+    setLoading(true);
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ email: form.email, password: form.password }),
+      });
+      const j = await res.json();
+      if (!res.ok) {
+        setErr(j?.error || "Credenciales inváilidas");
+        return;
+      }
+      setTimeout(() => {
+        window.location.assign("/home");
+      }, 0);
+    } catch (e: any) {
+      setErr(e?.message || "Error realizando login");
+    } finally {
+      setLoading(false);
+    }
   };
+
   return (
     <div
       className="login-admin-bg"
@@ -67,25 +96,18 @@ export default function Admin() {
             placeholder="********"
           />
         </label>
-        <label style={{ color: "#184d2b", fontWeight: 500 }}>
-          RUT
-          <input
-            type="text"
-            name="rut"
-            value={form.rut}
-            onChange={handleChange}
-            required
-            className="form-control"
-            style={{ marginTop: 4 }}
-            placeholder="12.345.678-9"
-          />
-        </label>
+        {err && (
+          <div className="text-danger" style={{ fontWeight: 600 }}>
+            {err}
+          </div>
+        )}
         <button
           type="submit"
           className="btn btn-success"
+          disabled={loading}
           style={{ marginTop: 12, fontWeight: 600, letterSpacing: 1 }}
         >
-          Ingresar
+          {loading ? "Ingresando..." : "Ingresar"}
         </button>
       </form>
     </div>
