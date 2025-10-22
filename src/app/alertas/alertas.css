@@ -14,3 +14,81 @@
   margin-top: 70px;
   text-align: center;
 }
+
+/* 🔽 estilos agregados de la tabla */
+.al-table-wrap {
+  overflow-x: auto;
+  padding: 20px;
+}
+
+.al-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+}
+
+.al-table th,
+.al-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  text-align: center;
+}
+
+.al-table th {
+  background-color: rgba(0, 0, 0, 0.2);
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+.al-table tr:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.al-error {
+  color: #ffbaba;
+}
+
+.al-hint {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #e0e0e0;
+  text-align: center;
+}
+
+/* 🌟 Animación de refresco centrada */
+.refresh-banner {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  padding: 16px 28px;
+  border-radius: 10px;
+  font-size: 20px;
+  font-weight: bold;
+  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(6px);
+  animation: fadeSlide 3s ease forwards;
+  z-index: 9999;
+}
+
+@keyframes fadeSlide {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -60%);
+  }
+  10% {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+  80% {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -60%);
+  }
+}

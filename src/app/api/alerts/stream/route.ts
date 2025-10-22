@@ -57,7 +57,6 @@ export async function GET() {
     cancel() {
       // limpiar listeners y recursos
       if (hb) clearInterval(hb);
-      // @ts-expect-error: la firma de tipos de pg permite removeListener
       client.removeListener(
         "notification",
         onNotify as unknown as (...args: unknown[]) => void
