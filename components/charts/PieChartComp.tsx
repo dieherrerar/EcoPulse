@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
   ResponsiveContainer,
   PieChart,
@@ -30,10 +30,25 @@ export default function PieChartComp(props: PieChartCompProps) {
     height = 220,
   } = props;
 
-  const chartData = data.map((d) => ({
-    [String(nameKey)]: d[nameKey as keyof CompositionDatum],
-    [String(valueKey)]: d[valueKey as keyof CompositionDatum],
-  })) as { [key: string]: any }[];
+  // Filtra -999/NaN y nombres vacíos
+  const chartData = useMemo(() => {
+    const arr = Array.isArray(data) ? data : [];
+    const nK = String(nameKey);
+    const vK = String(valueKey);
+    return arr
+      .filter((d: any) => {
+        const name = d?.[nK];
+        const raw = d?.[vK];
+        const num = typeof raw === "string" ? parseFloat(raw) : raw;
+        if (name === undefined || name === null || name === "") return false;
+        if (num === -999 || Number.isNaN(num)) return false;
+        return true;
+      })
+      .map((d) => ({
+        [nK]: (d as any)[nK],
+        [vK]: (d as any)[vK],
+      })) as { [key: string]: any }[];
+  }, [data, nameKey, valueKey]);
 
   return (
     <div className="pie-card p-2 h-100">
@@ -48,7 +63,7 @@ export default function PieChartComp(props: PieChartCompProps) {
               outerRadius={70}
               label
             >
-              {data.map((_, idx) => (
+              {chartData.map((_, idx) => (
                 <Cell key={`cell-${idx}`} fill={COLORS[idx % COLORS.length]} />
               ))}
             </Pie>

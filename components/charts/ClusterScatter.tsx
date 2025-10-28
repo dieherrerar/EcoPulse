@@ -11,6 +11,7 @@ import {
   Scatter,
   ReferenceDot,
 } from "recharts";
+import React, { useMemo } from "react";
 
 export type Point = {
   Tem_BME280: number;
@@ -38,14 +39,37 @@ function clusterColor(c: number) {
 }
 
 export default function ClusterScatter({ points, centroids, title }: Props) {
-  const clusters = Array.from(new Set(points.map((p) => p.cluster))).sort(
+  // Filtrar puntos y centroides con valores -999 o NaN
+  const cleanPoints = useMemo(() => {
+    const arr = Array.isArray(points) ? points : [];
+    return arr.filter((p) => {
+      const tx = typeof p.Tem_BME280 === "string" ? parseFloat(p.Tem_BME280 as any) : p.Tem_BME280;
+      const ty = typeof p.MP1_0_AtE === "string" ? parseFloat(p.MP1_0_AtE as any) : p.MP1_0_AtE;
+      if (tx === -999 || Number.isNaN(tx)) return false;
+      if (ty === -999 || Number.isNaN(ty)) return false;
+      return true;
+    });
+  }, [points]);
+
+  const cleanCentroids = useMemo(() => {
+    const arr = Array.isArray(centroids) ? centroids : [];
+    return arr.filter((c) => {
+      const tx = typeof c.Tem_BME280 === "string" ? parseFloat(c.Tem_BME280 as any) : c.Tem_BME280;
+      const ty = typeof c.MP1_0_AtE === "string" ? parseFloat(c.MP1_0_AtE as any) : c.MP1_0_AtE;
+      if (tx === -999 || Number.isNaN(tx)) return false;
+      if (ty === -999 || Number.isNaN(ty)) return false;
+      return true;
+    });
+  }, [centroids]);
+
+  const clusters = Array.from(new Set(cleanPoints.map((p) => p.cluster))).sort(
     (a, b) => a - b
   );
 
   const series = clusters.map((c) => ({
-    name: `Cluster ${c} (n=${points.filter((p) => p.cluster === c).length})`,
+    name: `Cluster ${c} (n=${cleanPoints.filter((p) => p.cluster === c).length})`,
     color: clusterColor(c),
-    data: points.filter((p) => p.cluster === c),
+    data: cleanPoints.filter((p) => p.cluster === c),
   }));
 
   return (
@@ -88,7 +112,7 @@ export default function ClusterScatter({ points, centroids, title }: Props) {
           {series.map((s, idx) => (
             <Scatter key={idx} name={s.name} data={s.data} fill={s.color} />
           ))}
-          {centroids.map((c) => (
+          {cleanCentroids.map((c) => (
             <ReferenceDot
               key={`cent-${c.cluster}`}
               x={c.Tem_BME280}

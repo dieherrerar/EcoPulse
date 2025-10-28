@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
   ResponsiveContainer,
   AreaChart,
@@ -37,12 +37,35 @@ export default function AreaChartComp(props: AreaChartCompProps) {
     ],
     height = 220,
   } = props;
+  
+  // Limpia valores -999 y NaN por serie; valida eje X
+  const cleanedData = useMemo(() => {
+    const xK = String(xKey);
+    const areaKeys = areas.map((a) => String(a.key));
+    const arr = Array.isArray(data) ? data : [];
+    return arr
+      .filter((d) => {
+        const xVal: any = (d as any)?.[xK];
+        if (xVal === undefined || xVal === null || xVal === "") return false;
+        if (xVal === -999 || xVal === "-999") return false;
+        return true;
+      })
+      .map((d) => {
+        const clone: any = { ...d };
+        for (const k of areaKeys) {
+          const raw = (clone as any)?.[k];
+          const num = typeof raw === "string" ? parseFloat(raw) : raw;
+          if (num === -999 || Number.isNaN(num)) clone[k] = null;
+        }
+        return clone;
+      });
+  }, [data, xKey, areas]);
   return (
     <div className="area-card p-2 h-100">
       <div className="small text-muted">{title}</div>
       <div className="area-card-body p-2">
         <ResponsiveContainer width="100%" height={height}>
-          <AreaChart data={data}>
+          <AreaChart data={cleanedData}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey={String(xKey)} />
             <YAxis />

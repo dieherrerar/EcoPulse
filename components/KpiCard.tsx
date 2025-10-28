@@ -8,11 +8,22 @@ interface KpiCardProps {
 
 export default function KpiCard(props: KpiCardProps) {
   const { title, value, subtitle } = props;
-  // Truncate value to 2 decimals if it's a number
-  const displayValue =
-    typeof value === "number"
-      ? value.toFixed(2)
-      : value;
+  // Maneja -999/NaN/null como sin datos y trunca a 2 decimales
+  let displayValue: string | number = value as any;
+  const rawNum =
+    typeof value === "string" ? parseFloat(value) : (value as number);
+  const isNoData =
+    value === null ||
+    value === undefined ||
+    (typeof value === "string" && value.trim() === "") ||
+    rawNum === -999 ||
+    Number.isNaN(rawNum as number);
+
+  if (isNoData) {
+    displayValue = "—";
+  } else if (typeof rawNum === "number" && !Number.isNaN(rawNum)) {
+    displayValue = rawNum.toFixed(2);
+  }
   return (
     <div className="Kpicard p-3 h-100">
       <div className="small text-muted">{title}</div>
