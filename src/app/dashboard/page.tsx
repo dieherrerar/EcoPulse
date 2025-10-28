@@ -16,6 +16,7 @@ import DownloadButton from "../../../components/DownloadCSV";
 import DownloadPDF from "../../../components/DownloadPDF";
 import "./dashboard.css";
 import dynamic from "next/dynamic";
+import AdminChartPicker from "../../../components/AdminChartPicker";
 
 // ⬇️ Listener de alertas (SSE) solo en cliente
 const AlertsSSEListener = dynamic(
@@ -34,8 +35,23 @@ const DashboardPage: NextPage = () => {
   const [datosDiccionario, setDatosDiccionario] = useState<
     { variable: string; descripcion: string; rango: string }[]
   >([]);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const inFlight = useRef<AbortController | null>(null);
+
+  //verificar si es admin
+  useEffect(() => {
+    async function checkAuth() {
+      try {
+        const res = await fetch("/api/auth/validate", { cache: "no-store" });
+        const j = await res.json();
+        setIsAdmin(j?.valid === true);
+      } catch {
+        setIsAdmin(false);
+      }
+    }
+    checkAuth();
+  }, []);
 
   //cargar fechas desde la BD
   useEffect(() => {
@@ -53,7 +69,6 @@ const DashboardPage: NextPage = () => {
       } catch (err) {
         setError("Error obteniendo fechas.");
       } finally {
-        // ¡OJO! No ponemos loading=false aquí todavía; dejamos que lo maneje el fetch de datos
       }
     })();
   }, []);
@@ -181,112 +196,133 @@ const DashboardPage: NextPage = () => {
         </select>
       </div>
 
-      {/* KPIs */}
-      <div className="row g-3 mb-3">
-        <div className="col-6 col-md-3">
-          <KpiCard
-            title="MP2.5_ATE promedio hoy"
-            value={kpis?.avgPM25 ?? "-"}
-            subtitle="µg/m³"
-          />
-        </div>
-        <div className="col-6 col-md-3">
-          <KpiCard
-            title="Temperatura promedio"
-            value={kpis?.avgTemp ?? "-"}
-            subtitle="°C"
-          />
-        </div>
-        <div className="col-6 col-md-3">
-          <KpiCard
-            title="CO₂ máximo"
-            value={kpis?.maxCO2 ?? "-"}
-            subtitle="ppm"
-          />
-        </div>
-        <div className="col-6 col-md-3">
-          <KpiCard
-            title="Precipitación acumulada"
-            value={kpis?.aguaCaida ?? "-"}
-            subtitle="mm"
-          />
-        </div>
-      </div>
-
-      {/* Gráficos */}
-      <div className="row g-3">
-        <div className="col-12 col-lg-6">
-          <div className="dashboard-chart-container">
-            <LineChartComp
-              data={data.tempCo2Trend}
-              xKey="tempBin"
-              yKey="co2"
-              xType="number"
-              title={`Relación CO₂ vs Temperatura`}
-              xLabel="Temperatura (°C)"
-              yLabel="CO₂ (ppm)"
-            />
+      <div className="row">
+        <div className={isAdmin ? "col-12 col-lg-9" : "col-12"}>
+          {/* KPIs */}
+          <div className="row g-3 mb-3">
+            <div className="col-6 col-md-3">
+              <KpiCard
+                title="MP2.5_ATE promedio hoy"
+                value={kpis?.avgPM25 ?? "-"}
+                subtitle="µg/m³"
+              />
+            </div>
+            <div className="col-6 col-md-3">
+              <KpiCard
+                title="Temperatura promedio"
+                value={kpis?.avgTemp ?? "-"}
+                subtitle="°C"
+              />
+            </div>
+            <div className="col-6 col-md-3">
+              <KpiCard
+                title="CO₂ máximo"
+                value={kpis?.maxCO2 ?? "-"}
+                subtitle="ppm"
+              />
+            </div>
+            <div className="col-6 col-md-3">
+              <KpiCard
+                title="Precipitación acumulada"
+                value={kpis?.aguaCaida ?? "-"}
+                subtitle="mm"
+              />
+            </div>
           </div>
-        </div>
-        <div className="col-12 col-lg-6">
-          <div className="dashboard-chart-container">
-            <BarChartComp
-              data={pm25Bars}
-              title={`PM promedio del día vs límite OMS`}
-            />
+
+          {/* Gráficos */}
+          <div className="row g-3">
+            <div className="col-12 col-lg-6">
+              <div className="dashboard-chart-container">
+                <LineChartComp
+                  data={data.tempCo2Trend}
+                  xKey="tempBin"
+                  yKey="co2"
+                  xType="number"
+                  title={`Relación CO₂ vs Temperatura`}
+                  xLabel="Temperatura (°C)"
+                  yLabel="CO₂ (ppm)"
+                />
+              </div>
+            </div>
+            <div className="col-12 col-lg-6">
+              <div className="dashboard-chart-container">
+                <BarChartComp
+                  data={pm25Bars}
+                  title={`PM promedio del día vs límite OMS`}
+                />
+              </div>
+            </div>
+
+            <div className="col-12 col-lg-6">
+              <div className="dashboard-chart-container">
+                <PieChartComp
+                  title="Distribución porcentual de partículas MP"
+                  data={composition}
+                  nameKey="name"
+                  valueKey="value"
+                />
+              </div>
+            </div>
+            <div className="col-12 col-lg-6">
+              <div className="dashboard-chart-container">
+                <AreaChartComp
+                  data={stacked}
+                  xKey="date"
+                  areas={[
+                    { key: "co2", name: "CO2" },
+                    { key: "consumo", name: "consumo" },
+                  ]}
+                  title="CO2 vs Consumo a lo largo del tiempo"
+                />
+              </div>
+            </div>
           </div>
+
+          {/* Si no es admin, mostrar botones de descarga. */}
+          {!isAdmin && (
+            <div className="mb-4 d-flex gap-3 flex-wrap">
+              <DownloadButton label="Extraer reporte CSV" date={selectedDate} />
+              <DownloadPDF
+                targetId="container py-4"
+                fileName={"eco_dashboard_" + selectedDate}
+                hideSelectors={[
+                  "#fecha",
+                  ".dashboard-btn-blue",
+                  ".download-controls",
+                  "#table-responsive mt-3 mb-5 dashboard-chart-container",
+                  "#mt-5 mb-3",
+                  "#mb-4 d-flex gap-3 flex-wrap",
+                ]}
+                btnClassName="dashboard-btn-blue"
+              />
+            </div>
+          )}
+
+          {/* Si no es admin, mostrar diccionario de datos*/}
+          {!isAdmin && (
+            <>
+              <h2 className="mt-5 mb-3">Diccionario de Datos</h2>
+              <div className="table-responsive mt-3 mb-5 dashboard-chart-container">
+                <Table datos={datosDiccionario} />
+              </div>
+            </>
+          )}
+
+          {!isAdmin && <AlertsSSEListener />}
         </div>
 
-        <div className="col-12 col-lg-6">
-          <div className="dashboard-chart-container">
-            <PieChartComp
-              title="Distribución porcentual de partículas MP"
-              data={composition}
-              nameKey="name"
-              valueKey="value"
-            />
-          </div>
-        </div>
-        <div className="col-12 col-lg-6">
-          <div className="dashboard-chart-container">
-            <AreaChartComp
-              data={stacked}
-              xKey="date"
-              areas={[
-                { key: "co2", name: "CO2" },
-                { key: "consumo", name: "consumo" },
-              ]}
-              title="CO2 vs Consumo a lo largo del tiempo"
-            />
-          </div>
-        </div>
+        {/* Right column: checklist / admin picker */}
+        {isAdmin && (
+          <aside className="col-12 col-lg-3">
+            <div className="admin-checklist p-2 p-lg-3">
+              <div className="sticky-side">
+                <AdminChartPicker title={"Gráficos"} />
+              </div>
+            </div>
+          </aside>
+        )}
       </div>
-
-      <div className="mb-4 d-flex gap-3 flex-wrap">
-        <DownloadButton label="Extraer reporte CSV" date={selectedDate} />
-        <DownloadPDF
-          targetId="container py-4"
-          fileName={"eco_dashboard_" + selectedDate}
-          hideSelectors={[
-            "#fecha",
-            ".dashboard-btn-blue",
-            ".download-controls",
-            "#table-responsive mt-3 mb-5 dashboard-chart-container",
-            "#mt-5 mb-3",
-            "#mb-4 d-flex gap-3 flex-wrap",
-          ]}
-          btnClassName="dashboard-btn-blue"
-        />
-      </div>
-
-      {/* Diccionario de Datos title */}
-      <h2 className="mt-5 mb-3">Diccionario de Datos</h2>
-      <div className="table-responsive mt-3 mb-5 dashboard-chart-container">
-        <Table datos={datosDiccionario} />
-      </div>
-
-      {/* 🔔 Listener: abre el modal cuando el backend lo indique */}
-      <AlertsSSEListener />
     </div>
   );
 };

@@ -64,7 +64,7 @@ export default function Navbar() {
           <ul className="navbar-nav me-auto mb-2 mb-lg-0">
             <li className="nav-item">
               <Link className="nav-link active" href="/dashboard">
-                Dashboards
+                Dashboard
               </Link>
             </li>
             <li className="nav-item dropdown">
@@ -74,7 +74,7 @@ export default function Navbar() {
             </li>
             <li className="nav-item dropdown">
               <Link className="nav-link active" href="/clustering">
-                Clustering
+                Patrones
               </Link>
             </li>
             {isAdmin && (
