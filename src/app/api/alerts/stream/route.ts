@@ -20,6 +20,7 @@ export async function GET() {
 
   // guardamos referencias para el cleanup
   let hb: ReturnType<typeof setInterval> | null = null;
+  let onNotifyRef: ((msg: Notification) => void) | null = null;
 
   // tipamos el payload que envías en NOTIFY
   type AlertPayload = {
@@ -48,6 +49,7 @@ export async function GET() {
       // suscripción y heartbeat
       // `on` está tipado en pg; `removeListener` existe para limpiar
       client.on("notification", onNotify);
+      onNotifyRef = onNotify;
       hb = setInterval(
         () => controller.enqueue(encoder.encode(":\n\n")),
         15000
@@ -57,10 +59,13 @@ export async function GET() {
     cancel() {
       // limpiar listeners y recursos
       if (hb) clearInterval(hb);
-      client.removeListener(
-        "notification",
-        onNotify as unknown as (...args: unknown[]) => void
-      );
+      if (onNotifyRef) {
+        client.removeListener(
+          "notification",
+          onNotifyRef as unknown as (...args: unknown[]) => void
+        );
+        onNotifyRef = null;
+      }
       client.release();
     },
   });
@@ -73,3 +78,4 @@ export async function GET() {
     },
   });
 }
+

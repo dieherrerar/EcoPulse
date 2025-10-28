@@ -19,39 +19,66 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // Helper to round to 2 decimals
+    // Helpers
     const round2 = (n: number) => Math.round(n * 100) / 100;
+    const toNum = (v: any): number =>
+      typeof v === "string" ? parseFloat(v) : (v as number);
+    const isValid = (v: any): boolean => {
+      const n = toNum(v);
+      return n !== -999 && !Number.isNaN(n);
+    };
+    const avgOf = (key: string): number => {
+      let sum = 0;
+      let count = 0;
+      for (const row of rows) {
+        const raw = (row as any)?.[key];
+        if (isValid(raw)) {
+          sum += toNum(raw);
+          count++;
+        }
+      }
+      return count > 0 ? round2(sum / count) : -999;
+    };
+    const maxOf = (key: string): number => {
+      let max: number | null = null;
+      for (const row of rows) {
+        const raw = (row as any)?.[key];
+        if (isValid(raw)) {
+          const n = toNum(raw);
+          if (max === null || n > max) max = n;
+        }
+      }
+      return max === null ? -999 : round2(max);
+    };
+    const sumOf = (key: string): number => {
+      let sum = 0;
+      let any = false;
+      for (const row of rows) {
+        const raw = (row as any)?.[key];
+        if (isValid(raw)) {
+          sum += toNum(raw);
+          any = true;
+        }
+      }
+      return any ? round2(sum) : -999;
+    };
 
-    const avgPM25 = round2(
-      rows.reduce((acc, row) => acc + parseFloat(row["mp2.5_ate"] || "0"), 0) /
-        rows.length
-    );
-    const avgPM10 = round2(
-      rows.reduce((acc, row) => acc + parseFloat(row["mp10_ate"] || "0"), 0) /
-        rows.length
-    );
-    const avgTemp = round2(
-      rows.reduce((acc, row) => acc + parseFloat(row["tem_bme280"] || "0"), 0) /
-        rows.length
-    );
-    const maxCO2 = round2(
-      Math.max(...rows.map((row) => parseFloat(row["co2_mhz19"] || "0")))
-    );
+    const avgPM25 = avgOf("mp2.5_ate");
+    const avgPM10 = avgOf("mp10_ate");
+    const avgTemp = avgOf("tem_bme280");
+    const maxCO2 = maxOf("co2_mhz19");
+    const aguaCaida = sumOf("agua_caida");
 
-    const aguaCaida = round2(
-      rows.reduce((acc, row) => acc + parseFloat(row["agua_caida"] || "0"), 0)
-    );
-
-    const totalConsumo = round2(
-      rows.reduce(
-        (acc, row) =>
-          acc +
-          parseFloat(row["consumo_1"] || "0") +
-          parseFloat(row["consumo_2"] || "0") +
-          parseFloat(row["consumo_3"] || "0"),
-        0
-      )
-    );
+    const totalConsumo = (() => {
+      let sum = 0;
+      let any = false;
+      for (const row of rows) {
+        const c1 = (row as any)["consumo_1"]; if (isValid(c1)) { sum += toNum(c1); any = true; }
+        const c2 = (row as any)["consumo_2"]; if (isValid(c2)) { sum += toNum(c2); any = true; }
+        const c3 = (row as any)["consumo_3"]; if (isValid(c3)) { sum += toNum(c3); any = true; }
+      }
+      return any ? round2(sum) : -999;
+    })();
 
     const kpis = { avgPM25, avgPM10, avgTemp, maxCO2, aguaCaida };
 
@@ -62,48 +89,46 @@ export async function GET(req: NextRequest) {
       co2: round2(parseFloat(row["co2_mhz19"] || "0")),
     }));
 
-    const totalMP = rows.reduce(
-      (acc, row) =>
-        acc +
-        parseFloat(row["mp1.0_ate"] || "0") +
-        parseFloat(row["mp2.5_ate"] || "0") +
-        parseFloat(row["mp10_ate"] || "0"),
-      0
-    );
+    const totalMP = rows.reduce((acc, row) => {
+      const v1 = (row as any)["mp1.0_ate"]; acc += isValid(v1) ? toNum(v1) : 0;
+      const v2 = (row as any)["mp2.5_ate"]; acc += isValid(v2) ? toNum(v2) : 0;
+      const v3 = (row as any)["mp10_ate"]; acc += isValid(v3) ? toNum(v3) : 0;
+      return acc;
+    }, 0);
 
     const composition = [
       {
         name: "mp1.0_ate",
-        value: round2(
-          (rows.reduce(
-            (acc, row) => acc + parseFloat(row["mp1.0_ate"] || "0"),
-            0
-          ) /
-            totalMP) *
-            100
-        ),
+        value: totalMP
+          ? round2(
+              (rows.reduce((acc, row) => {
+                const v = (row as any)["mp1.0_ate"]; return acc + (isValid(v) ? toNum(v) : 0);
+              }, 0) /
+                totalMP) * 100
+            )
+          : 0,
       },
       {
         name: "mp2.5_ate",
-        value: round2(
-          (rows.reduce(
-            (acc, row) => acc + parseFloat(row["mp2.5_ate"] || "0"),
-            0
-          ) /
-            totalMP) *
-            100
-        ),
+        value: totalMP
+          ? round2(
+              (rows.reduce((acc, row) => {
+                const v = (row as any)["mp2.5_ate"]; return acc + (isValid(v) ? toNum(v) : 0);
+              }, 0) /
+                totalMP) * 100
+            )
+          : 0,
       },
       {
         name: "mp10_ate",
-        value: round2(
-          (rows.reduce(
-            (acc, row) => acc + parseFloat(row["mp10_ate"] || "0"),
-            0
-          ) /
-            totalMP) *
-            100
-        ),
+        value: totalMP
+          ? round2(
+              (rows.reduce((acc, row) => {
+                const v = (row as any)["mp10_ate"]; return acc + (isValid(v) ? toNum(v) : 0);
+              }, 0) /
+                totalMP) * 100
+            )
+          : 0,
       },
     ];
 
@@ -116,6 +141,8 @@ export async function GET(req: NextRequest) {
         WHERE fecha_registro::date = $1
           AND ("tem_bme280") IS NOT NULL
           AND ("co2_mhz19") IS NOT NULL
+          AND ("tem_bme280")::numeric <> -999
+          AND ("co2_mhz19")::numeric <> -999
         GROUP BY 1
         ORDER BY 1`,
       [date]

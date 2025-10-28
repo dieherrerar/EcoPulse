@@ -8,10 +8,10 @@ interface KpiCardProps {
 
 export default function KpiCard(props: KpiCardProps) {
   const { title, value, subtitle } = props;
-  // Maneja -999/NaN/null como sin datos y trunca a 2 decimales
+  // Maneja -999/NaN/null/vacío como sin datos; si numérico válido, 2 decimales
   let displayValue: string | number = value as any;
-  const rawNum =
-    typeof value === "string" ? parseFloat(value) : (value as number);
+  const rawNum = typeof value === "string" ? parseFloat(value) : (value as number);
+
   const isNoData =
     value === null ||
     value === undefined ||
@@ -20,10 +20,11 @@ export default function KpiCard(props: KpiCardProps) {
     Number.isNaN(rawNum as number);
 
   if (isNoData) {
-    displayValue = "—";
+    displayValue = "N/A";
   } else if (typeof rawNum === "number" && !Number.isNaN(rawNum)) {
     displayValue = rawNum.toFixed(2);
   }
+
   return (
     <div className="Kpicard p-3 h-100">
       <div className="small text-muted">{title}</div>
@@ -32,3 +33,4 @@ export default function KpiCard(props: KpiCardProps) {
     </div>
   );
 }
+
