@@ -1,19 +1,22 @@
 "use client";
 import { useEffect, useState } from "react";
-import ClusterScatter, {
-  Point,
-  Centroid,
-} from "../../../components/charts/ClusterScatter";
 import DownloadPDF from "../../../components/DownloadPDF";
-import { div } from "framer-motion/client";
+// ⬇️ nuevo: usa el componente 3D
+import Cluster3D from "../../../components/charts/Cluster3D";
 
 const POLL_MS = 120_000;
 
 export default function ClusterrPage() {
   const [dates, setDates] = useState<string[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>("");
-  const [points, setPoints] = useState<Point[]>([]);
-  const [centroids, setCentroids] = useState<Centroid[]>([]);
+  const [points, setPoints] = useState<any[]>([]);
+  const [centroids, setCentroids] = useState<any[]>([]);
+  const [features, setFeatures] = useState<string[]>([
+    "Tem_BME280",
+    "MP1.0_AtE",
+    "CO2_MHZ19",
+    "Rap_Viento",
+  ]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
@@ -49,6 +52,10 @@ export default function ClusterrPage() {
         if (!r.ok) throw new Error(j?.error || "Error al cargar clusters");
         setPoints(j.points ?? []);
         setCentroids(j.centroids ?? []);
+        // si el backend envía features, úsalo
+        if (Array.isArray(j.features) && j.features.length >= 4) {
+          setFeatures(j.features);
+        }
       } catch (e: any) {
         setErr(e.message ?? "Error");
       } finally {
@@ -69,6 +76,9 @@ export default function ClusterrPage() {
         if (r.ok) {
           setPoints(j.points ?? []);
           setCentroids(j.centroids ?? []);
+          if (Array.isArray(j.features) && j.features.length >= 4) {
+            setFeatures(j.features);
+          }
         }
       } catch (err) {
         console.warn("Error actualizando clusters:", err);
@@ -108,11 +118,21 @@ export default function ClusterrPage() {
           </select>
         </div>
 
-        {/* Gráfico dentro del mismo contenedor estilizado */}
+        {/* Gráfico 3D (X=Tem, Y=MP1.0, Z=CO2, Tamaño=Rap_Viento) */}
         <div className="dashboard-chart-container">
-          <ClusterScatter points={points} centroids={centroids} />
+          <Cluster3D
+            points={points}
+            centroids={centroids}
+            features={features}
+            xKey="Tem_BME280"
+            yKey="MP1.0_AtE"
+            zKey="CO2_MHZ19"
+            sizeKey="Rap_Viento"
+            title=""
+          />
         </div>
       </div>
+
       <div id="ButtonPDF" className="mb-4">
         <div className="container">
           <div className="d-flex gap-3 flex-wrap">

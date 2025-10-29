@@ -1,7 +1,7 @@
-export type Features = "Tem_BME280" | "MP1.0_AtE";
+export type FeatureName = string;
 
 export interface MinMaxParams {
-  feature_order: Features[];
+  feature_order: FeatureName[];
   data_min_: number[];
   data_max_: number[];
 }

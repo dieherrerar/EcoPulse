@@ -33,7 +33,9 @@
     "src/app/dashboard/page.tsx",
     "src/app/home/page.tsx",
     "src/app/layout.jsx",
-    ".next/types/**/*.ts"
+    ".next/types/**/*.ts",
+    "src",
+    "src/types"
   ],
   "exclude": ["node_modules"]
 }

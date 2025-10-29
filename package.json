@@ -22,8 +22,10 @@
     "lucide-react": "^0.545.0",
     "next": "15.5.2",
     "pg": "^8.16.3",
+    "plotly.js-basic-dist": "^3.1.2",
     "react": "19.1.0",
     "react-dom": "19.1.0",
+    "react-plotly.js": "^2.6.0",
     "recharts": "^3.2.1"
   },
   "devDependencies": {
@@ -34,6 +36,7 @@
     "@types/pg": "^8.15.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/react-plotly.js": "^2.6.3",
     "eslint": "^9",
     "eslint-config-next": "15.5.2",
     "tailwindcss": "^4",

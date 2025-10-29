@@ -10,19 +10,15 @@ import {
   assignClusterScaled,
 } from "../../lib/clustering";
 
-type Row = {
-  tem_BME280: number | null;
-  MP1_0_AtE: number | null;
-  fecha_registro: string;
-};
+const P = scalerParams as MinMaxParams; // feature_order de 4 dims
+const C = centroidsScaled as ScaledCentroid[]; // centroides escalados
 
-const P = scalerParams as MinMaxParams;
-const C = centroidsScaled as ScaledCentroid[];
-const [F1, F2] = P.feature_order;
-
+// Mapea nombre lógico → nombre real en BD
 const DB_COLS: Record<string, string> = {
-  Tem_BME280: "tem_bme280",
-  "MP1.0_AtE": `"mp1.0_ate"`,
+  Tem_BME280: `"tem_bme280"`,
+  "MP1.0_AtE": `"mp1.0_ate"`, // ¡ojo el punto en el alias lógico!
+  CO2_MHZ19: `"co2_mhz19"`,
+  Rap_Viento: `"rap_viento"`,
 };
 
 export async function GET(req: Request) {
@@ -37,53 +33,58 @@ export async function GET(req: Request) {
       );
     }
 
+    // Armamos el SELECT con ALIAS EXACTOS = nombres lógicos (con punto donde aplique)
+    const selects = P.feature_order
+      .map((f) => `${DB_COLS[f]} AS "${f}"`)
+      .join(", ");
+
     const sql = `
       SELECT
-        ${DB_COLS[F1]} AS "Tem_BME280",
-        ${DB_COLS[F2]} AS "MP1_0_AtE",
+        ${selects},
         "fecha_registro"
       FROM datos_dispositivo
       WHERE "fecha_registro"::date = $1
-        AND ${DB_COLS[F1]} IS NOT NULL
-        AND ${DB_COLS[F2]} IS NOT NULL
+        ${P.feature_order.map((f) => `AND ${DB_COLS[f]} IS NOT NULL`).join(" ")}
       ORDER BY "fecha_registro" ASC;
     `;
 
     const result = await query(sql, [dateParam]);
     const rows = result.rows || [];
 
-    if (!rows || rows.length === 0) {
+    if (!rows.length) {
       return NextResponse.json(
         { error: "No hay datos para la fecha indicada" },
         { status: 404 }
       );
     }
 
-    //construcción de puntos mas asignación de cluster
-    const points = rows.map((r) => {
-      const x = [Number(r.Tem_BME280), Number(r.MP1_0_AtE)];
+    // Construcción de puntos + asignación de cluster (en ESCALA min-max)
+    const points = rows.map((r: any) => {
+      const x = P.feature_order.map((f) => Number(r[f]));
       const z = minMaxScale(x, P);
       const cl = assignClusterScaled(z, C);
-      return {
-        Tem_BME280: x[0],
-        MP1_0_AtE: x[1],
-        cluster: cl,
-        timestamp: r.fecha_registro,
-      };
+
+      // objeto con las mismas 4 claves + cluster + timestamp
+      const obj: any = { cluster: cl, timestamp: r.fecha_registro };
+      P.feature_order.forEach((f, i) => (obj[f] = x[i]));
+      return obj;
     });
 
-    //centroides en unidades originales (para tooltip/leyenda)
+    // Centroides en unidades originales con las MISMAS claves
     const centroids = C.map((c) => {
-      const inv = minMaxInverse(c.values, P);
-      return {
-        cluster: c.cluster,
-        Tem_BME280: inv[0],
-        MP1_0_AtE: inv[1],
-      };
+      const inv = minMaxInverse(c.values, P); // 4 valores en orden
+      const obj: any = { cluster: c.cluster };
+      P.feature_order.forEach((f, i) => (obj[f] = inv[i]));
+      return obj;
     });
 
     return NextResponse.json(
-      { date: dateParam, points, centroids },
+      {
+        date: dateParam,
+        features: P.feature_order, // opcional, útil para el cliente
+        points,
+        centroids,
+      },
       { status: 200 }
     );
   } catch (e: any) {
