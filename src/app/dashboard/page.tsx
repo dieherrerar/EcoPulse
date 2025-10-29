@@ -309,7 +309,7 @@ const DashboardPage: NextPage = () => {
             </>
           )}
 
-          {!isAdmin && <AlertsSSEListener />}
+          <AlertsSSEListener />
         </div>
 
         {/* Right column: checklist / admin picker */}
