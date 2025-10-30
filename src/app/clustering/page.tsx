@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import DownloadPDF from "../../../components/DownloadPDF";
 // ⬇️ nuevo: usa el componente 3D
 import Cluster3D from "../../../components/charts/Cluster3D";
+import FullPageLoader from "../../../components/FullPageLoader";
 
 const POLL_MS = 120_000;
 
@@ -88,11 +89,15 @@ export default function ClusterrPage() {
     return () => clearInterval(id);
   }, [selectedDate]);
 
+  if (loading) {
+    return <FullPageLoader message={"Cargando gráfico de patrones..."} />;
+  }
+
   return (
     <div>
       <div className="container py-4" id="cluster-root">
         {/* Título con misma jerarquía visual */}
-        <h2 className="mb-3">
+        <h2 className="mb-3 text-center">
           Patrones Ambientales Detectados (Clusters y Centroides)
         </h2>
 

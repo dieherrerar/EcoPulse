@@ -17,6 +17,8 @@ import DownloadPDF from "../../../components/DownloadPDF";
 import "./dashboard.css";
 import dynamic from "next/dynamic";
 import AdminChartPicker from "../../../components/AdminChartPicker";
+import FullPageLoader from "../../../components/FullPageLoader";
+import { ChartBar } from "lucide-react";
 
 // ⬇️ Listener de alertas (SSE) solo en cliente
 const AlertsSSEListener = dynamic(
@@ -36,6 +38,19 @@ const DashboardPage: NextPage = () => {
     { variable: string; descripcion: string; rango: string }[]
   >([]);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [chartVisibility, setChartVisibility] = useState({
+    AreaChartComp: true,
+    BarChartComp: true,
+    LineChartComp: true,
+    PieChartComp: true,
+  });
+
+  const handleToggleChart = (chartKey: keyof typeof chartVisibility) => {
+    setChartVisibility((prev) => ({
+      ...prev,
+      [chartKey]: !prev[chartKey],
+    }));
+  };
 
   const inFlight = useRef<AbortController | null>(null);
 
@@ -135,32 +150,7 @@ const DashboardPage: NextPage = () => {
   ];
 
   if (loading)
-    return (
-      <div
-        style={{
-          minHeight: "60vh",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <div className="spinner-ecopulse" />
-        <div
-          style={{
-            fontSize: "2rem",
-            fontWeight: "bold",
-            color: "#1e90ff",
-            marginTop: "2rem",
-            textAlign: "center",
-            letterSpacing: "1px",
-            textShadow: "0 2px 8px rgba(30,144,255,0.10)",
-          }}
-        >
-          Cargando el Dashboard Ambiental...
-        </div>
-      </div>
-    );
+    return <FullPageLoader message={"Cargando el Dashboard Ambiental..."} />;
   if (!data)
     return (
       <div className="container py-4 text-danger">
@@ -172,7 +162,7 @@ const DashboardPage: NextPage = () => {
 
   return (
     <div className="container py-4">
-      <h2 className="mb-3">Dashboard Ambiental</h2>
+      <h2 className="mb-3 text-center">Dashboard Ambiental</h2>
 
       {/* Dropdown para seleccionar fecha con leyenda */}
       <div className="mb-4">
@@ -232,51 +222,61 @@ const DashboardPage: NextPage = () => {
 
           {/* Gráficos */}
           <div className="row g-3">
-            <div className="col-12 col-lg-6">
-              <div className="dashboard-chart-container">
-                <LineChartComp
-                  data={data.tempCo2Trend}
-                  xKey="tempBin"
-                  yKey="co2"
-                  xType="number"
-                  title={`Relación CO₂ vs Temperatura`}
-                  xLabel="Temperatura (°C)"
-                  yLabel="CO₂ (ppm)"
-                />
+            {chartVisibility.LineChartComp && (
+              <div className="col-12 col-lg-6">
+                <div className="dashboard-chart-container">
+                  <LineChartComp
+                    data={data.tempCo2Trend}
+                    xKey="tempBin"
+                    yKey="co2"
+                    xType="number"
+                    title={`Relación CO₂ vs Temperatura`}
+                    xLabel="Temperatura (°C)"
+                    yLabel="CO₂ (ppm)"
+                  />
+                </div>
               </div>
-            </div>
-            <div className="col-12 col-lg-6">
-              <div className="dashboard-chart-container">
-                <BarChartComp
-                  data={pm25Bars}
-                  title={`PM promedio del día vs límite OMS`}
-                />
-              </div>
-            </div>
+            )}
 
-            <div className="col-12 col-lg-6">
-              <div className="dashboard-chart-container">
-                <PieChartComp
-                  title="Distribución porcentual de partículas MP"
-                  data={composition}
-                  nameKey="name"
-                  valueKey="value"
-                />
+            {chartVisibility.BarChartComp && (
+              <div className="col-12 col-lg-6">
+                <div className="dashboard-chart-container">
+                  <BarChartComp
+                    data={pm25Bars}
+                    title={`PM promedio del día vs límite OMS`}
+                  />
+                </div>
               </div>
-            </div>
-            <div className="col-12 col-lg-6">
-              <div className="dashboard-chart-container">
-                <AreaChartComp
-                  data={stacked}
-                  xKey="date"
-                  areas={[
-                    { key: "co2", name: "CO2" },
-                    { key: "consumo", name: "consumo" },
-                  ]}
-                  title="CO2 vs Consumo a lo largo del tiempo"
-                />
+            )}
+
+            {chartVisibility.PieChartComp && (
+              <div className="col-12 col-lg-6">
+                <div className="dashboard-chart-container">
+                  <PieChartComp
+                    title="Distribución porcentual de partículas MP"
+                    data={composition}
+                    nameKey="name"
+                    valueKey="value"
+                  />
+                </div>
               </div>
-            </div>
+            )}
+
+            {chartVisibility.AreaChartComp && (
+              <div className="col-12 col-lg-6">
+                <div className="dashboard-chart-container">
+                  <AreaChartComp
+                    data={stacked}
+                    xKey="date"
+                    areas={[
+                      { key: "co2", name: "CO2" },
+                      { key: "consumo", name: "consumo" },
+                    ]}
+                    title="CO2 vs Consumo a lo largo del tiempo"
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Si no es admin, mostrar botones de descarga. */}
@@ -317,7 +317,11 @@ const DashboardPage: NextPage = () => {
           <aside className="col-12 col-lg-3">
             <div className="admin-checklist p-2 p-lg-3">
               <div className="sticky-side">
-                <AdminChartPicker title={"Gráficos"} />
+                <AdminChartPicker
+                  title={"Seleccionar Gráficos"}
+                  chartVisibility={chartVisibility}
+                  onToggleChart={handleToggleChart}
+                />
               </div>
             </div>
           </aside>

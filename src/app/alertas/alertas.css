@@ -74,6 +74,12 @@
   text-align: center;
 }
 
+/* Reducir padding lateral para la tabla de alertas (solo aquí) */
+.dashboard-chart-container.small-padding {
+  padding-left: 0.5rem !important;
+  padding-right: 0.5rem !important;
+}
+
 /* 🌟 Animación de refresco centrada */
 .refresh-banner {
   position: fixed;

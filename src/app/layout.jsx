@@ -11,7 +11,7 @@ export default function RootLayout({ children }) {
         style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
       >
         <Navbar />
-        <main style={{ flex: "1" }}>{children}</main>
+        <main style={{ flex: "1", position: "relative" }}>{children}</main>
         <Footer />
       </body>
     </html>
