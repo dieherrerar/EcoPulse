@@ -36,7 +36,7 @@ export default function AdminChartPicker(props: AdminChartPickerProps) {
             className="form-check-label small text-muted"
             htmlFor="firstCheckbox"
           >
-            Area Chart
+            CO₂ vs Consumo
           </label>
         </div>
       </li>
@@ -45,7 +45,7 @@ export default function AdminChartPicker(props: AdminChartPickerProps) {
           <input
             className="form-check-input me-2"
             type="checkbox"
-            id="AreaChartComp"
+            id="BarChartComp"
             checked={chartVisibility.BarChartComp}
             onChange={() => onToggleChart("BarChartComp")}
           />
@@ -53,7 +53,7 @@ export default function AdminChartPicker(props: AdminChartPickerProps) {
             className="form-check-label small text-muted"
             htmlFor="secondCheckbox"
           >
-            Bar Chart
+            PM promedio vs límite OMS
           </label>
         </div>
       </li>
@@ -70,7 +70,7 @@ export default function AdminChartPicker(props: AdminChartPickerProps) {
             className="form-check-label small text-muted"
             htmlFor="thirdCheckbox"
           >
-            Line Chart
+            Relación CO₂ vs Temperatura
           </label>
         </div>
       </li>
@@ -87,7 +87,7 @@ export default function AdminChartPicker(props: AdminChartPickerProps) {
             className="form-check-label small text-muted"
             htmlFor="thirdCheckbox"
           >
-            Pie Chart
+            Distribución(%) de partículas MP
           </label>
         </div>
       </li>
