@@ -18,7 +18,6 @@ import "./dashboard.css";
 import dynamic from "next/dynamic";
 import AdminChartPicker from "../../../components/AdminChartPicker";
 import FullPageLoader from "../../../components/FullPageLoader";
-import { ChartBar } from "lucide-react";
 
 // ⬇️ Listener de alertas (SSE) solo en cliente
 const AlertsSSEListener = dynamic(
@@ -27,6 +26,13 @@ const AlertsSSEListener = dynamic(
 );
 
 const POLL_MS = 120_000; //2 minutos
+
+const DEFAULT_VIS = {
+  AreaChartComp: true,
+  BarChartComp: true,
+  LineChartComp: true,
+  PieChartComp: true,
+} as const;
 
 const DashboardPage: NextPage = () => {
   const [data, setData] = useState<DashboardPayload | null>(null);
@@ -38,18 +44,56 @@ const DashboardPage: NextPage = () => {
     { variable: string; descripcion: string; rango: string }[]
   >([]);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [chartVisibility, setChartVisibility] = useState({
-    AreaChartComp: true,
-    BarChartComp: true,
-    LineChartComp: true,
-    PieChartComp: true,
-  });
+  const [chartVisibility, setChartVisibility] = useState(DEFAULT_VIS);
+  const [saving, setSaving] = useState(false);
 
+  //Carga visibilidad de los graficos desde el servidor
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/chart-visibility", { cache: "no-store" });
+        const j = await res.json();
+        if (j?.success && j?.data) {
+          setChartVisibility((prev) => ({ ...prev, ...j.data }));
+        }
+      } catch (e) {
+        console.warn("Error cargando visibilidad de gráficos: ", e);
+      }
+    })();
+  }, []);
+
+  //Manejar guardado de visibilidad de graficos
   const handleToggleChart = (chartKey: keyof typeof chartVisibility) => {
-    setChartVisibility((prev) => ({
-      ...prev,
-      [chartKey]: !prev[chartKey],
-    }));
+    const next = { ...chartVisibility, [chartKey]: !chartVisibility[chartKey] };
+    setChartVisibility(next);
+
+    if (!isAdmin) return; // solo admins pueden guardar
+
+    setSaving(true);
+    fetch("/api/chart-visibility", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(next),
+    })
+      .then((res) => res.json())
+      .then((j) => {
+        if (!j?.success) {
+          //rollback si falla
+          setChartVisibility((prev) => ({
+            ...prev,
+            [chartKey]: !next[chartKey],
+          }));
+          console.error("Error guardando visibilidad de gráficos: ", j?.error);
+        }
+      })
+      .catch((e) => {
+        setChartVisibility((prev) => ({
+          ...prev,
+          [chartKey]: !next[chartKey],
+        })); //rollback si falla
+        console.error("Error guardando visibilidad de gráficos: ", e);
+      })
+      .finally(() => setSaving(false));
   };
 
   const inFlight = useRef<AbortController | null>(null);
@@ -149,6 +193,7 @@ const DashboardPage: NextPage = () => {
     { name: "Límite OMS 24 h", value: 130 },
   ];
 
+  //mensaje de carga y errores
   if (loading)
     return <FullPageLoader message={"Cargando el Dashboard Ambiental..."} />;
   if (!data)
@@ -158,7 +203,7 @@ const DashboardPage: NextPage = () => {
       </div>
     );
 
-  const { kpis, timeseries, composition, stacked } = data;
+  const { kpis, composition, stacked } = data;
 
   return (
     <div className="container py-4">
@@ -299,15 +344,10 @@ const DashboardPage: NextPage = () => {
             </div>
           )}
 
-          {/* Si no es admin, mostrar diccionario de datos*/}
-          {!isAdmin && (
-            <>
-              <h2 className="mt-5 mb-3">Diccionario de Datos</h2>
-              <div className="table-responsive mt-3 mb-5 dashboard-chart-container">
-                <Table datos={datosDiccionario} />
-              </div>
-            </>
-          )}
+          <h2 className="mt-5 mb-3">Diccionario de Datos</h2>
+          <div className="table-responsive mt-3 mb-5 dashboard-chart-container">
+            <Table datos={datosDiccionario} />
+          </div>
 
           <AlertsSSEListener />
         </div>
@@ -322,6 +362,9 @@ const DashboardPage: NextPage = () => {
                   chartVisibility={chartVisibility}
                   onToggleChart={handleToggleChart}
                 />
+                <div className="mt-2 small text-muted">
+                  {saving ? "Guardando cambios..." : " "}
+                </div>
               </div>
             </div>
           </aside>

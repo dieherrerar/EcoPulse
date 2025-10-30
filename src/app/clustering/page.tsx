@@ -20,7 +20,22 @@ export default function ClusterrPage() {
   ]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
+  //Verificar si el usuario es admin
+  useEffect(() => {
+    async function checkAuth() {
+      try {
+        const res = await fetch("/api/auth/validate", { cache: "no-store" });
+        const j = await res.json();
+        setIsAdmin(j?.isAdmin === true);
+      } catch {
+        setIsAdmin(false);
+      }
+    }
+  });
+
+  //extrae las fechas disponibles en la base de datos
   useEffect(() => {
     (async () => {
       try {
@@ -40,6 +55,7 @@ export default function ClusterrPage() {
     })();
   }, []);
 
+  //cuando cambia la fecha seleccionada, carga los datos de clusters y centroides
   useEffect(() => {
     (async () => {
       if (!selectedDate) return;
@@ -65,6 +81,7 @@ export default function ClusterrPage() {
     })();
   }, [selectedDate]);
 
+  //polling para actualizar datos cada POLL_MS milisegundos
   useEffect(() => {
     if (!selectedDate) return;
 
@@ -138,18 +155,20 @@ export default function ClusterrPage() {
         </div>
       </div>
 
-      <div id="ButtonPDF" className="mb-4">
-        <div className="container">
-          <div className="d-flex gap-3 flex-wrap">
-            <DownloadPDF
-              targetId="container py-4"
-              fileName={"eco_clustering" + selectedDate}
-              hideSelectors={["#fecha", "#ButtonPDF"]}
-              btnClassName="dashboard-btn-blue"
-            />
+      {!isAdmin && (
+        <div id="ButtonPDF" className="mb-4">
+          <div className="container">
+            <div className="d-flex gap-3 flex-wrap">
+              <DownloadPDF
+                targetId="container py-4"
+                fileName={"eco_clustering" + selectedDate}
+                hideSelectors={["#fecha", "#ButtonPDF"]}
+                btnClassName="dashboard-btn-blue"
+              />
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

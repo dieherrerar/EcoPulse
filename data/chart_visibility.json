@@ -1,0 +1,6 @@
+{
+  "AreaChartComp": false,
+  "BarChartComp": true,
+  "LineChartComp": true,
+  "PieChartComp": true
+}
