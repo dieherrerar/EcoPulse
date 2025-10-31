@@ -16,10 +16,22 @@ interface AdminChartPickerProps {
       | "LineChartComp"
       | "PieChartComp"
   ) => void;
+  onSave: () => void;
+  onCancel: () => void;
+  hasChanges?: boolean;
+  saving?: boolean;
 }
 
 export default function AdminChartPicker(props: AdminChartPickerProps) {
-  const { title, chartVisibility, onToggleChart } = props;
+  const {
+    title,
+    chartVisibility,
+    onToggleChart,
+    onSave,
+    onCancel,
+    hasChanges = false,
+    saving = false,
+  } = props;
   return (
     <ul className="list-group">
       <h5 className="mb-3 d-none d-lg-block">{title}</h5>
@@ -34,7 +46,7 @@ export default function AdminChartPicker(props: AdminChartPickerProps) {
           />
           <label
             className="form-check-label small text-muted"
-            htmlFor="firstCheckbox"
+            htmlFor="AreaChartComp"
           >
             CO₂ vs Consumo
           </label>
@@ -51,7 +63,7 @@ export default function AdminChartPicker(props: AdminChartPickerProps) {
           />
           <label
             className="form-check-label small text-muted"
-            htmlFor="secondCheckbox"
+            htmlFor="BarChartComp"
           >
             PM promedio vs límite OMS
           </label>
@@ -68,7 +80,7 @@ export default function AdminChartPicker(props: AdminChartPickerProps) {
           />
           <label
             className="form-check-label small text-muted"
-            htmlFor="thirdCheckbox"
+            htmlFor="LineChartComp"
           >
             Relación CO₂ vs Temperatura
           </label>
@@ -85,12 +97,37 @@ export default function AdminChartPicker(props: AdminChartPickerProps) {
           />
           <label
             className="form-check-label small text-muted"
-            htmlFor="thirdCheckbox"
+            htmlFor="PieChartComp"
           >
             Distribución(%) de partículas MP
           </label>
         </div>
       </li>
+
+      {/* BOTON DE GUARDAR/CANCELAR */}
+      <li className="list-group-item d-flex gap-2 justify-content-end">
+        <button
+          className="btn btn-sm dashboard-btn-cancel"
+          type="button"
+          onClick={onCancel}
+          disabled={!hasChanges || saving}
+        >
+          Cancelar
+        </button>
+        <button
+          className="btn btn-sm dashboard-btn-save"
+          type="button"
+          onClick={onSave}
+          disabled={!hasChanges || saving}
+        >
+          {saving ? "Guardando..." : "Guardar"}
+        </button>
+      </li>
+      {hasChanges && !saving && (
+        <li className="list-group-item small text-muted save-hint">
+          Tienes cambios sin guardar
+        </li>
+      )}
     </ul>
   );
 }

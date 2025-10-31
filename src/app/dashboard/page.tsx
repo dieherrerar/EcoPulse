@@ -34,6 +34,8 @@ const DEFAULT_VIS = {
   PieChartComp: true,
 } as const;
 
+type ToastState = { show: boolean; message: string };
+
 const DashboardPage: NextPage = () => {
   const [data, setData] = useState<DashboardPayload | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -45,7 +47,10 @@ const DashboardPage: NextPage = () => {
   >([]);
   const [isAdmin, setIsAdmin] = useState(false);
   const [chartVisibility, setChartVisibility] = useState(DEFAULT_VIS);
+  const [draftVisibility, setDraftVisibility] = useState(DEFAULT_VIS);
   const [saving, setSaving] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
+  const [toast, setToast] = useState<ToastState>({ show: false, message: "" });
 
   //Carga visibilidad de los graficos desde el servidor
   useEffect(() => {
@@ -55,6 +60,8 @@ const DashboardPage: NextPage = () => {
         const j = await res.json();
         if (j?.success && j?.data) {
           setChartVisibility((prev) => ({ ...prev, ...j.data }));
+          setDraftVisibility((prev) => ({ ...prev, ...j.data }));
+          setIsDirty(false);
         }
       } catch (e) {
         console.warn("Error cargando visibilidad de gráficos: ", e);
@@ -62,38 +69,46 @@ const DashboardPage: NextPage = () => {
     })();
   }, []);
 
-  //Manejar guardado de visibilidad de graficos
-  const handleToggleChart = (chartKey: keyof typeof chartVisibility) => {
-    const next = { ...chartVisibility, [chartKey]: !chartVisibility[chartKey] };
-    setChartVisibility(next);
+  //Manejar guardado de visibilidad en el draft
+  const handleToggleChartDraft = (chartKey: keyof typeof draftVisibility) => {
+    setDraftVisibility((prev) => {
+      const next = { ...prev, [chartKey]: !prev[chartKey] };
+      setIsDirty(JSON.stringify(next) !== JSON.stringify(chartVisibility));
+      return next;
+    });
+  };
 
-    if (!isAdmin) return; // solo admins pueden guardar
-
+  //Guarda los cambios guardados en el draft al servidor
+  const handleSave = async () => {
+    if (!isAdmin) return;
     setSaving(true);
-    fetch("/api/chart-visibility", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(next),
-    })
-      .then((res) => res.json())
-      .then((j) => {
-        if (!j?.success) {
-          //rollback si falla
-          setChartVisibility((prev) => ({
-            ...prev,
-            [chartKey]: !next[chartKey],
-          }));
-          console.error("Error guardando visibilidad de gráficos: ", j?.error);
-        }
-      })
-      .catch((e) => {
-        setChartVisibility((prev) => ({
-          ...prev,
-          [chartKey]: !next[chartKey],
-        })); //rollback si falla
-        console.error("Error guardando visibilidad de gráficos: ", e);
-      })
-      .finally(() => setSaving(false));
+    try {
+      const res = await fetch("/api/chart-visibility", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(draftVisibility),
+      });
+      const j = await res.json();
+      if (!j?.success) throw new Error(j?.message || "Error guardando cambios");
+      setChartVisibility(draftVisibility);
+      setIsDirty(false);
+      setToast({ show: true, message: "Cambios guardados exitosamente" });
+      setTimeout(() => setToast({ show: false, message: "" }), 2500);
+    } catch (e) {
+      console.error(e);
+      setToast({ show: true, message: "Error al guardar los cambios" });
+      setTimeout(() => setToast({ show: false, message: "" }), 2500);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  //Cancelar los cambios del draft
+  const handleCancel = () => {
+    setDraftVisibility(chartVisibility);
+    setIsDirty(false);
   };
 
   const inFlight = useRef<AbortController | null>(null);
@@ -207,6 +222,26 @@ const DashboardPage: NextPage = () => {
 
   return (
     <div className="container py-4">
+      {toast.show && (
+        <div
+          className="position-fixed top-0 end-0 p-3"
+          style={{ zIndex: 2000 }}
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          <div className="toast show align-items-center text-bg-success border-0 shadow">
+            <div className="d-flex">
+              <div className="toast-body">{toast.message}</div>
+              <button
+                type="button"
+                className="btn-close btn-close-white me-2 m-auto"
+                aria-label="Close"
+                onClick={() => setToast({ show: false, message: "" })}
+              />
+            </div>
+          </div>
+        </div>
+      )}
       <h2 className="mb-3 text-center">Dashboard Ambiental</h2>
 
       {/* Dropdown para seleccionar fecha con leyenda */}
@@ -359,8 +394,12 @@ const DashboardPage: NextPage = () => {
               <div className="sticky-side">
                 <AdminChartPicker
                   title={"Seleccionar Gráficos"}
-                  chartVisibility={chartVisibility}
-                  onToggleChart={handleToggleChart}
+                  chartVisibility={draftVisibility}
+                  onToggleChart={handleToggleChartDraft}
+                  onSave={handleSave}
+                  onCancel={handleCancel}
+                  hasChanges={isDirty}
+                  saving={saving}
                 />
                 <div className="mt-2 small text-muted">
                   {saving ? "Guardando cambios..." : " "}
