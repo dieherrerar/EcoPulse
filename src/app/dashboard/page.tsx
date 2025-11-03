@@ -27,14 +27,13 @@ const AlertsSSEListener = dynamic(
 
 const POLL_MS = 120_000; //2 minutos
 
-const DEFAULT_VIS = {
-  AreaChartComp: true,
-  BarChartComp: true,
-  LineChartComp: true,
-  PieChartComp: true,
-} as const;
-
 type ToastState = { show: boolean; message: string };
+
+type GraficoItem = {
+  id_grafico: number;
+  titulo_grafico: string;
+  activo: number;
+};
 
 const DashboardPage: NextPage = () => {
   const [data, setData] = useState<DashboardPayload | null>(null);
@@ -46,53 +45,66 @@ const DashboardPage: NextPage = () => {
     { variable: string; descripcion: string; rango: string }[]
   >([]);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [chartVisibility, setChartVisibility] = useState(DEFAULT_VIS);
-  const [draftVisibility, setDraftVisibility] = useState(DEFAULT_VIS);
+  const [graficos, setGraficos] = useState<GraficoItem[]>([]);
+  const [chartVisibility, setChartVisibility] = useState({
+    AreaChartComp: true,
+    BarChartComp: true,
+    LineChartComp: true,
+    PieChartComp: true,
+  });
+  const [draft, setDraft] = useState<GraficoItem[]>([]);
   const [saving, setSaving] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [toast, setToast] = useState<ToastState>({ show: false, message: "" });
 
-  //Carga visibilidad de los graficos desde el servidor
+  //Cargando graficos desde la BD
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("/api/chart-visibility", { cache: "no-store" });
+        const res = await fetch("/api/graficos", { cache: "no-store" });
         const j = await res.json();
-        if (j?.success && j?.data) {
-          setChartVisibility((prev) => ({ ...prev, ...j.data }));
-          setDraftVisibility((prev) => ({ ...prev, ...j.data }));
-          setIsDirty(false);
-        }
+        if (!j.success) throw new Error(j.error || "Error cargando gráficos");
+        setGraficos(j.data);
+        setDraft(j.data);
       } catch (e) {
-        console.warn("Error cargando visibilidad de gráficos: ", e);
+        console.warn("Error cargando gráficos: ", e);
       }
     })();
   }, []);
 
   //Manejar guardado de visibilidad en el draft
-  const handleToggleChartDraft = (chartKey: keyof typeof draftVisibility) => {
-    setDraftVisibility((prev) => {
-      const next = { ...prev, [chartKey]: !prev[chartKey] };
-      setIsDirty(JSON.stringify(next) !== JSON.stringify(chartVisibility));
+  const handleToggle = (id_graficos: number) => {
+    setDraft((prev) => {
+      const next = prev.map((g) =>
+        Number(g.id_grafico) === id_graficos
+          ? { ...g, activo: g.activo === 1 ? 2 : 1 }
+          : g
+      );
+      setIsDirty(JSON.stringify(next) !== JSON.stringify(graficos));
       return next;
     });
   };
 
-  //Guarda los cambios guardados en el draft al servidor
+  //Guarda los cambios guardados en el draft en la BD
   const handleSave = async () => {
     if (!isAdmin) return;
     setSaving(true);
     try {
-      const res = await fetch("/api/chart-visibility", {
+      const payload = draft.map(({ id_grafico, activo }) => ({
+        id_grafico: Number(id_grafico),
+        activo: Number(activo) === 1 ? 1 : 2,
+      }));
+      const res = await fetch("/api/graficos", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(draftVisibility),
+        body: JSON.stringify(payload),
       });
       const j = await res.json();
-      if (!j?.success) throw new Error(j?.message || "Error guardando cambios");
-      setChartVisibility(draftVisibility);
+      console.log("Respuesta del PUT:", j);
+      if (!j?.success) throw new Error(j?.error || "Error guardando cambios");
+      setGraficos(draft);
       setIsDirty(false);
       setToast({ show: true, message: "Cambios guardados exitosamente" });
       setTimeout(() => setToast({ show: false, message: "" }), 2500);
@@ -107,9 +119,21 @@ const DashboardPage: NextPage = () => {
 
   //Cancelar los cambios del draft
   const handleCancel = () => {
-    setDraftVisibility(chartVisibility);
+    setDraft(graficos);
     setIsDirty(false);
   };
+
+  useEffect(() => {
+    // cuando cargues graficos desde GET
+    if (graficos.length === 0) return;
+    const byId = new Map(graficos.map((g) => [Number(g.id_grafico), g.activo]));
+    setChartVisibility({
+      AreaChartComp: byId.get(5) === 1,
+      BarChartComp: byId.get(3) === 1,
+      LineChartComp: byId.get(2) === 1,
+      PieChartComp: byId.get(4) === 1,
+    });
+  }, [graficos]);
 
   const inFlight = useRef<AbortController | null>(null);
 
@@ -394,8 +418,8 @@ const DashboardPage: NextPage = () => {
               <div className="sticky-side">
                 <AdminChartPicker
                   title={"Seleccionar Gráficos"}
-                  chartVisibility={draftVisibility}
-                  onToggleChart={handleToggleChartDraft}
+                  graficos={draft}
+                  onToggleGrafico={handleToggle}
                   onSave={handleSave}
                   onCancel={handleCancel}
                   hasChanges={isDirty}
