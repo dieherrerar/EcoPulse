@@ -3,7 +3,7 @@ import "./HomePage.css";
 import Carousel from "../../../components/Carousel";
 import Card from "../../../components/CardHome";
 import { checkAuth } from "../lib/checkAuth";
-
+import TempPage from "../../../components/componente-hijo-client/TempPage";
 export default async function HomePage() {
   const { valid, user } = await checkAuth();
 
@@ -46,6 +46,7 @@ export default async function HomePage() {
           }
         />
       </div>
+      <TempPage></TempPage>
     </div>
   );
 }
