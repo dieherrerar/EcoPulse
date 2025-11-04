@@ -2,8 +2,9 @@ import React from "react";
 import "./HomePage.css";
 import Carousel from "../../../components/Carousel";
 import Card from "../../../components/CardHome";
+import TemperatureCard from "../../../components/TemperatureCard";
 import { checkAuth } from "../lib/checkAuth";
-import TempPage from "../../../components/componente-hijo-client/TempPage";
+
 export default async function HomePage() {
   const { valid, user } = await checkAuth();
 
@@ -46,7 +47,18 @@ export default async function HomePage() {
           }
         />
       </div>
-      <TempPage></TempPage>
+      <h2 className="temperature-title">Temperaturas Actuales</h2>
+      <div className="temperature-cards">
+        <div className="kpi-card-wrapper">
+          <TemperatureCard city="Viña del Mar" />
+        </div>
+        <div className="kpi-card-wrapper">
+          <TemperatureCard city="Valparaíso" />
+        </div>
+        <div className="kpi-card-wrapper">
+          <TemperatureCard city="Punta Arenas" />
+        </div>
+      </div>
     </div>
   );
 }
