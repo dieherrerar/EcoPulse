@@ -51,6 +51,15 @@ const DashboardPage: NextPage = () => {
   const [chartVisibility, setChartVisibility] = useState(DEFAULT_VIS);
   const [saving, setSaving] = useState(false);
 
+  // Fecha de hoy en formato YYYY-MM-DD (hora local)
+  const todayStr = (() => {
+    const t = new Date();
+    const yyyy = t.getFullYear();
+    const mm = String(t.getMonth() + 1).padStart(2, "0");
+    const dd = String(t.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  })();
+
   
 
   //Carga visibilidad de los graficos desde el servidor
@@ -138,15 +147,17 @@ const DashboardPage: NextPage = () => {
     })();
   }, []);
 
-  // Inicializa el rango con la fecha seleccionada por defecto
+  // Inicializa el rango: fin = min(hoy, última fecha BD), inicio ajustado para no superar fin
   useEffect(() => {
     if (selectedDate) {
-      setPendingStartDate(selectedDate);
-      setPendingEndDate(selectedDate);
-      setAppliedStartDate(selectedDate);
-      setAppliedEndDate(selectedDate);
+      const end = todayStr < selectedDate ? todayStr : selectedDate;
+      const start = selectedDate > end ? end : selectedDate;
+      setPendingStartDate(start);
+      setPendingEndDate(end);
+      setAppliedStartDate(start);
+      setAppliedEndDate(end);
     }
-  }, [selectedDate]);
+  }, [selectedDate, todayStr]);
 
   // Acción del botón "Filtrar"
   const handleApplyFilter = () => {
