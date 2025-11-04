@@ -12,10 +12,17 @@ export async function GET(req: NextRequest) {
   try {
     const url = new URL(req.url);
     const dateParam = url.searchParams.get("date");
+    const start = url.searchParams.get("start");
+    const end = url.searchParams.get("end");
 
     // Construir y ejecutar consulta según exista dateParam o no
     let result;
-    if (dateParam) {
+    if (start && end) {
+      result = await query(
+        "SELECT * FROM datos_dispositivo WHERE CAST(fecha_registro AS date) BETWEEN $1 AND $2 ORDER BY fecha_registro ASC",
+        [start, end]
+      );
+    } else if (dateParam) {
       result = await query(
         "SELECT * FROM datos_dispositivo WHERE CAST(fecha_registro AS date) = $1 ORDER BY fecha_registro ASC",
         [dateParam]
@@ -48,9 +55,14 @@ export async function GET(req: NextRequest) {
     }
 
     const csvContent = csvLines.join("\r\n");
-    const dayTag = dateParam
-      ? dateParam
-      : new Date().toISOString().slice(0, 10);
+    let dayTag: string;
+    if (start && end) {
+      dayTag = `_${start}_a_${end}`;
+    } else if (dateParam) {
+      dayTag = `_${dateParam}`;
+    } else {
+      dayTag = `_${new Date().toISOString().slice(0, 10)}`;
+    }
     const filename = `datos_ambientales${dayTag}.csv`;
 
     return new Response(csvContent, {
