@@ -4,14 +4,22 @@ import React from "react";
 
 interface DownloadButtonProps {
   label: String;
-  date?: String;
+  date?: String; // compat
+  start?: String;
+  end?: String;
 }
 
 export default function DownloadButton(props: DownloadButtonProps) {
-  const { label, date } = props;
+  const { label, date, start, end } = props;
   const handleDownload = async () => {
     try {
-      const url = date ? `/api/export-csv?date=${date}` : "/api/export-csv";
+      let url = "/api/export-csv";
+      if (start && end) {
+        const params = new URLSearchParams({ start: String(start), end: String(end) });
+        url = `/api/export-csv?${params.toString()}`;
+      } else if (date) {
+        url = `/api/export-csv?date=${date}`;
+      }
 
       const res = await fetch(url);
       if (!res.ok) {
@@ -23,7 +31,8 @@ export default function DownloadButton(props: DownloadButtonProps) {
 
       const a = document.createElement("a");
       a.href = downloadUrl;
-      a.download = `datos_ambientales${date || ""}.csv`;
+      const suffix = start && end ? `_${start}_a_${end}` : (date ? `_${date}` : "");
+      a.download = `datos_ambientales${suffix}.csv`;
 
       document.body.appendChild(a);
       a.click();

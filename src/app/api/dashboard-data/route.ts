@@ -5,11 +5,24 @@ import { query } from "../../lib/db";
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const date = searchParams.get("date") || "2025-10-01";
-    const result = await query(
-      "SELECT * FROM datos_dispositivo WHERE fecha_registro::date = $1 ORDER BY fecha_registro ASC",
-      [date]
-    );
+    const date = searchParams.get("date") || undefined;
+    const start = searchParams.get("start") || undefined;
+    const end = searchParams.get("end") || undefined;
+
+    // Determinar consulta por fecha única o rango
+    let result;
+    if (start && end) {
+      result = await query(
+        "SELECT * FROM datos_dispositivo WHERE fecha_registro::date BETWEEN $1 AND $2 ORDER BY fecha_registro ASC",
+        [start, end]
+      );
+    } else {
+      const effectiveDate = date || "2025-10-01";
+      result = await query(
+        "SELECT * FROM datos_dispositivo WHERE fecha_registro::date = $1 ORDER BY fecha_registro ASC",
+        [effectiveDate]
+      );
+    }
 
     const rows = result.rows;
 
@@ -132,21 +145,42 @@ export async function GET(req: NextRequest) {
       },
     ];
 
-    const tempBins = await query(
-      `SELECT
-          FLOOR(("tem_bme280")::numeric) AS temp_bin,
-          AVG(("co2_mhz19")::numeric)    AS avg_co2,
-          COUNT(*)                       AS n
-        FROM datos_dispositivo
-        WHERE fecha_registro::date = $1
-          AND ("tem_bme280") IS NOT NULL
-          AND ("co2_mhz19") IS NOT NULL
-          AND ("tem_bme280")::numeric <> -999
-          AND ("co2_mhz19")::numeric <> -999
-        GROUP BY 1
-        ORDER BY 1`,
-      [date]
-    );
+    // Consulta de bins por temperatura aplicada al mismo rango o fecha
+    let tempBins;
+    if (start && end) {
+      tempBins = await query(
+        `SELECT
+            FLOOR(("tem_bme280")::numeric) AS temp_bin,
+            AVG(("co2_mhz19")::numeric)    AS avg_co2,
+            COUNT(*)                       AS n
+          FROM datos_dispositivo
+          WHERE fecha_registro::date BETWEEN $1 AND $2
+            AND ("tem_bme280") IS NOT NULL
+            AND ("co2_mhz19") IS NOT NULL
+            AND ("tem_bme280")::numeric <> -999
+            AND ("co2_mhz19")::numeric <> -999
+          GROUP BY 1
+          ORDER BY 1`,
+        [start, end]
+      );
+    } else {
+      const effectiveDate = date || "2025-10-01";
+      tempBins = await query(
+        `SELECT
+            FLOOR(("tem_bme280")::numeric) AS temp_bin,
+            AVG(("co2_mhz19")::numeric)    AS avg_co2,
+            COUNT(*)                       AS n
+          FROM datos_dispositivo
+          WHERE fecha_registro::date = $1
+            AND ("tem_bme280") IS NOT NULL
+            AND ("co2_mhz19") IS NOT NULL
+            AND ("tem_bme280")::numeric <> -999
+            AND ("co2_mhz19")::numeric <> -999
+          GROUP BY 1
+          ORDER BY 1`,
+        [effectiveDate]
+      );
+    }
 
     const tempRows = tempBins.rows;
 
