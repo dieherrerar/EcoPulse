@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import DownloadPDF from "../../../components/DownloadPDF";
 import Cluster3D from "../../../components/charts/Cluster3D";
 import FullPageLoader from "../../../components/FullPageLoader";
+// Alertas eliminadas en esta vista; se muestran en el dashboard
 
 const POLL_MS = 120_000;
 
@@ -214,7 +215,7 @@ export default function ClusterrPage() {
           </div>
         </div>
       )}
+      {/* AlertModal se muestra solo en el Dashboard */}
     </div>
   );
 }
-
