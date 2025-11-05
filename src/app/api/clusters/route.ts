@@ -13,10 +13,10 @@ import {
 const P = scalerParams as MinMaxParams; // feature_order de 4 dims
 const C = centroidsScaled as ScaledCentroid[]; // centroides escalados
 
-// Mapea nombre lógico → nombre real en BD
+// Mapa nombre lógico -> columna real en BD
 const DB_COLS: Record<string, string> = {
   Tem_BME280: `"tem_bme280"`,
-  "MP1.0_AtE": `"mp1.0_ate"`, // ¡ojo el punto en el alias lógico!
+  "MP1.0_AtE": `"mp1.0_ate"`, // ojo el punto en el alias lógico
   CO2_MHZ19: `"co2_mhz19"`,
   Rap_Viento: `"rap_viento"`,
 };
@@ -25,30 +25,49 @@ export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
     const dateParam = url.searchParams.get("date");
+    const start = url.searchParams.get("start");
+    const end = url.searchParams.get("end");
 
-    if (!dateParam) {
-      return NextResponse.json(
-        { error: "Falta el parametro 'date' (YYYY-MM-DD)" },
-        { status: 400 }
-      );
-    }
-
-    // Armamos el SELECT con ALIAS EXACTOS = nombres lógicos (con punto donde aplique)
+    // Armamos el SELECT con alias EXACTOS = nombres lógicos (con punto donde aplique)
     const selects = P.feature_order
       .map((f) => `${DB_COLS[f]} AS "${f}"`)
       .join(", ");
 
-    const sql = `
-      SELECT
-        ${selects},
-        "fecha_registro"
-      FROM datos_dispositivo
-      WHERE "fecha_registro"::date = $1
-        ${P.feature_order.map((f) => `AND ${DB_COLS[f]} IS NOT NULL`).join(" ")}
-      ORDER BY "fecha_registro" ASC;
-    `;
+    // Construye SQL según rango (start,end) o fecha única (date)
+    let sql: string;
+    let params: any[];
+    const notNull = P.feature_order.map((f) => `AND ${DB_COLS[f]} IS NOT NULL`).join(" ");
 
-    const result = await query(sql, [dateParam]);
+    if (start && end) {
+      sql = `
+        SELECT
+          ${selects},
+          "fecha_registro"
+        FROM datos_dispositivo
+        WHERE "fecha_registro"::date BETWEEN $1 AND $2
+          ${notNull}
+        ORDER BY "fecha_registro" ASC;
+      `;
+      params = [start, end];
+    } else if (dateParam) {
+      sql = `
+        SELECT
+          ${selects},
+          "fecha_registro"
+        FROM datos_dispositivo
+        WHERE "fecha_registro"::date = $1
+          ${notNull}
+        ORDER BY "fecha_registro" ASC;
+      `;
+      params = [dateParam];
+    } else {
+      return NextResponse.json(
+        { error: "Faltan parámetros: 'start' y 'end' o 'date' (YYYY-MM-DD)" },
+        { status: 400 }
+      );
+    }
+
+    const result = await query(sql, params);
     const rows = result.rows || [];
 
     if (!rows.length) {
@@ -80,8 +99,10 @@ export async function GET(req: Request) {
 
     return NextResponse.json(
       {
-        date: dateParam,
-        features: P.feature_order, // opcional, útil para el cliente
+        date: dateParam ?? undefined,
+        start: start ?? undefined,
+        end: end ?? undefined,
+        features: P.feature_order,
         points,
         centroids,
       },
@@ -94,3 +115,4 @@ export async function GET(req: Request) {
     );
   }
 }
+
