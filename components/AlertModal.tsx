@@ -61,40 +61,48 @@ export default function AlertModal({
         background: "rgba(0,0,0,0.4)",
         display: "flex",
         justifyContent: "center",
-        alignItems: "flex-start",
-        paddingTop: "5vh",
+        alignItems: "center", // centrado vertical
         zIndex: 9998,
       }}
     >
       <div
         style={{
           width: "100%",
-          maxWidth: 520,
-          borderRadius: 8,
+          maxWidth: 560,
+          borderRadius: 14, // igual a dashboard
           background: "#fff",
-          boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
+          // sombra suave similar al dashboard
+          boxShadow: "0 4px 18px rgba(30, 80, 60, 0.1)",
           zIndex: 9999,
-          border: `1px solid ${theme.border}`,
+          border: "1px solid rgba(30, 80, 60, 0.18)",
           overflow: "hidden",
+          fontFamily: 'Inter, "Segoe UI", Arial, sans-serif',
+          color: "#184d2b",
         }}
       >
-        <div
-          style={{
-            background: theme.headerBg,
-            color: theme.headerText,
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            padding: "10px 14px",
-            fontWeight: 600,
-          }}
-        >
-          <span aria-hidden>{theme.icon}</span>
-          <span>{theme.label}</span>
+        <div style={{ padding: "12px 16px", display: "flex", alignItems: "center", gap: 10 }}>
+          <div
+            // franja indicadora del tipo a la izquierda
+            style={{
+              width: 6,
+              alignSelf: "stretch",
+              borderRadius: 4,
+              background:
+                alert.level === "critical"
+                  ? "#f03e3e"
+                  : alert.level === "warning"
+                  ? "#f59f00"
+                  : "#1e90ff",
+            }}
+          />
+          <div style={{ display: "flex", alignItems: "center", gap: 8, fontWeight: 700 }}>
+            <span aria-hidden style={{ fontSize: 18 }}>{theme.icon}</span>
+            <span style={{ fontSize: 14 }}>{theme.label}</span>
+          </div>
         </div>
 
         <div style={{ padding: 16 }}>
-          <h3 style={{ margin: 0, marginBottom: 8, fontSize: 18, fontWeight: 600 }}>
+          <h3 style={{ margin: 0, marginBottom: 8, fontSize: 18, fontWeight: 700, color: "#184d2b" }}>
             {alert.title}
           </h3>
           <p style={{ margin: 0, marginBottom: 8, fontSize: 14 }}>{alert.message}</p>
@@ -135,20 +143,7 @@ export default function AlertModal({
           )}
 
           <div style={{ marginTop: 16, display: "flex", justifyContent: "flex-end", gap: 8 }}>
-            <button
-              onClick={onClose}
-              style={{
-                border: "1px solid #cbd5e1",
-                background: "#f1f5f9",
-                color: "#0f172a",
-                borderRadius: 6,
-                padding: "6px 12px",
-                fontSize: 14,
-                cursor: "pointer",
-              }}
-            >
-              Aceptar
-            </button>
+            <button onClick={onClose} className="dashboard-btn-blue">Aceptar</button>
           </div>
         </div>
       </div>
