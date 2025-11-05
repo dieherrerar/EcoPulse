@@ -40,6 +40,10 @@ const DashboardPage: NextPage = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [dates, setDates] = useState<string[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>("");
+  const [pendingStartDate, setPendingStartDate] = useState<string>("");
+  const [pendingEndDate, setPendingEndDate] = useState<string>("");
+  const [appliedStartDate, setAppliedStartDate] = useState<string>("");
+  const [appliedEndDate, setAppliedEndDate] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [datosDiccionario, setDatosDiccionario] = useState<
     { variable: string; descripcion: string; rango: string }[]
@@ -57,7 +61,18 @@ const DashboardPage: NextPage = () => {
   const [isDirty, setIsDirty] = useState(false);
   const [toast, setToast] = useState<ToastState>({ show: false, message: "" });
 
-  //Cargando graficos desde la BD
+  // Fecha de hoy en formato YYYY-MM-DD (hora local)
+  const todayStr = (() => {
+    const t = new Date();
+    const yyyy = t.getFullYear();
+    const mm = String(t.getMonth() + 1).padStart(2, "0");
+    const dd = String(t.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  })();
+
+  
+
+  //Carga visibilidad de los graficos desde el servidor
   useEffect(() => {
     (async () => {
       try {
@@ -171,14 +186,34 @@ const DashboardPage: NextPage = () => {
     })();
   }, []);
 
-  //cargar los datos al dashboard segun la fecha seleccionada
+  // Inicializa el rango: fin = min(hoy, última fecha BD), inicio ajustado para no superar fin
+  useEffect(() => {
+    if (selectedDate) {
+      const end = todayStr < selectedDate ? todayStr : selectedDate;
+      const start = selectedDate > end ? end : selectedDate;
+      setPendingStartDate(start);
+      setPendingEndDate(end);
+      setAppliedStartDate(start);
+      setAppliedEndDate(end);
+    }
+  }, [selectedDate, todayStr]);
+
+  // Acción del botón "Filtrar"
+  const handleApplyFilter = () => {
+    if (!pendingStartDate || !pendingEndDate) return;
+    setAppliedStartDate(pendingStartDate);
+    setAppliedEndDate(pendingEndDate);
+  };
+
+  // Cargar datos según rango aplicado
   useEffect(() => {
     (async () => {
-      if (!selectedDate) return; // evita setLoading(false) prematuro
+      if (!appliedStartDate || !appliedEndDate) return;
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`/api/dashboard-data?date=${selectedDate}`, {
+        const params = new URLSearchParams({ start: appliedStartDate, end: appliedEndDate });
+        const res = await fetch(`/api/dashboard-data?${params.toString()}`, {
           cache: "no-store",
         });
         if (!res.ok) throw new Error("No se pudo obtener el dashboard");
@@ -191,15 +226,16 @@ const DashboardPage: NextPage = () => {
         setLoading(false);
       }
     })();
-  }, [selectedDate]);
+  }, [appliedStartDate, appliedEndDate]);
 
   //Polling automatico cada 2 minutos
   useEffect(() => {
-    if (!selectedDate) return;
+    if (!appliedStartDate || !appliedEndDate) return;
 
     const intervalID = setInterval(async () => {
       try {
-        const res = await fetch(`/api/dashboard-data?date=${selectedDate}`, {
+        const params = new URLSearchParams({ start: appliedStartDate, end: appliedEndDate });
+        const res = await fetch(`/api/dashboard-data?${params.toString()}`, {
           cache: "no-store",
         });
         if (res.ok) {
@@ -212,7 +248,7 @@ const DashboardPage: NextPage = () => {
     }, POLL_MS);
 
     return () => clearInterval(intervalID);
-  }, [selectedDate]);
+  }, [appliedStartDate, appliedEndDate]);
 
   //Diccionario de datos
   useEffect(() => {
@@ -228,8 +264,8 @@ const DashboardPage: NextPage = () => {
   const avg = data?.kpis?.avgPM10 ?? 0;
 
   const pm25Bars: CompositionDatum[] = [
-    { name: "Promedio del día", value: avg },
-    { name: "Límite OMS 24 h", value: 130 },
+    { name: "Promedio del periodo", value: avg },
+    { name: "Limite OMS 24 h", value: 130 },
   ];
 
   //mensaje de carga y errores
@@ -279,26 +315,41 @@ const DashboardPage: NextPage = () => {
       )}
       <h2 className="mb-3 text-center">Dashboard Ambiental</h2>
 
-      {/* Dropdown para seleccionar fecha con leyenda */}
-      <div className="mb-4">
-        <select
-          id="fecha"
-          className="form-select"
-          value={selectedDate}
-          onChange={(e) => setSelectedDate(e.target.value)}
-        >
-          <option value="" disabled>
-            Selecciona fecha
-          </option>
-          {dates.map((date) => {
-            const formatted = new Date(date).toLocaleDateString("es-CL");
-            return (
-              <option key={date} value={date}>
-                {formatted}
-              </option>
-            );
-          })}
-        </select>
+      {/* Selector de rango de fechas y botón de filtrado */}
+      <div className="mb-4 d-flex gap-2 align-items-end flex-wrap">
+        <div>
+          <label htmlFor="fecha-inicio" className="form-label small">Fecha inicio</label>
+          <input
+            id="fecha-inicio"
+            type="date"
+            className="form-control"
+            min={dates[0]}
+            max={dates[dates.length - 1]}
+            value={pendingStartDate}
+            onChange={(e) => setPendingStartDate(e.target.value)}
+          />
+        </div>
+        <div>
+          <label htmlFor="fecha-fin" className="form-label small">Fecha fin</label>
+          <input
+            id="fecha-fin"
+            type="date"
+            className="form-control"
+            min={dates[0]}
+            max={dates[dates.length - 1]}
+            value={pendingEndDate}
+            onChange={(e) => setPendingEndDate(e.target.value)}
+          />
+        </div>
+        <div>
+          <button
+            className="dashboard-btn-blue"
+            onClick={handleApplyFilter}
+            disabled={!pendingStartDate || !pendingEndDate}
+          >
+            Filtrar
+          </button>
+        </div>
       </div>
 
       <div className="row">
@@ -307,7 +358,7 @@ const DashboardPage: NextPage = () => {
           <div id="kpis-dashboard" className="row g-3 mb-3">
             <div className="col-6 col-md-3">
               <KpiCard
-                title="MP2.5_ATE promedio hoy"
+                title="MP2.5_ATE promedio"
                 value={kpis?.avgPM25 ?? "-"}
                 subtitle="µg/m³"
               />
@@ -397,7 +448,7 @@ const DashboardPage: NextPage = () => {
           {/* Si no es admin, mostrar botones de descarga. */}
           {!isAdmin && (
             <div className="mb-4 d-flex gap-3 flex-wrap">
-              <DownloadButton label="Extraer reporte CSV" date={selectedDate} />
+              <DownloadButton label="Extraer reporte CSV" start={appliedStartDate} end={appliedEndDate} />
               <DownloadPDF
                 date={selectedDate}
                 kpis={kpisForPdf}

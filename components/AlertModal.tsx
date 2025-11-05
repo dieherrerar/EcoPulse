@@ -25,53 +25,126 @@ export default function AlertModal({
 }) {
   if (!open || !alert) return null;
 
+  const theme = (() => {
+    if (alert.level === "critical") {
+      return {
+        headerBg: "#F8D7DA",
+        headerText: "#842029",
+        border: "#F5C2C7",
+        icon: "!",
+        label: "Alerta Critica",
+      } as const;
+    }
+    if (alert.level === "warning") {
+      return {
+        headerBg: "#FFF3CD",
+        headerText: "#664D03",
+        border: "#FFEEBA",
+        icon: "!",
+        label: "Advertencia",
+      } as const;
+    }
+    return {
+      headerBg: "#E1F0FF",
+      headerText: "#084298",
+      border: "#B6DAFF",
+      icon: "i",
+      label: "Informacion",
+    } as const;
+  })();
+
   return (
-    <div className="fixed inset-0 grid place-items-center bg-black/40" style={{ zIndex: 9998 }}>
-      <div className="w-full max-w-md rounded-lg bg-white p-4 shadow-lg" style={{ zIndex: 9999 }}>
-        <h3 className="mb-2 text-lg font-semibold">{alert.title}</h3>
-        <p className="text-sm mb-2">{alert.message}</p>
-
-        {alert.value && (
-          <p className="text-xs text-gray-600 mb-2">
-            {alert.variable}: <b>{alert.value}</b> — {alert.ts}
-          </p>
-        )}
-
-        {(alert.detalle_tipo_alerta ||
-          alert.detalle_fecha_hora_alerta ||
-          alert.detalle_valor_anomalo ||
-          alert.detalle_columnas_afectadas) && (
-          <div className="mt-3 border-t pt-3 text-xs text-gray-700 space-y-1">
-            {alert.detalle_tipo_alerta && (
-              <p>
-                Tipo de alerta: <b>{alert.detalle_tipo_alerta}</b>
-              </p>
-            )}
-            {alert.detalle_fecha_hora_alerta && (
-              <p>
-                Fecha/Hora: <b>{alert.detalle_fecha_hora_alerta}</b>
-              </p>
-            )}
-            {typeof alert.detalle_valor_anomalo !== "undefined" && alert.detalle_valor_anomalo !== null && (
-              <p>
-                Valor anómalo: <b>{String(alert.detalle_valor_anomalo)}</b>
-              </p>
-            )}
-            {alert.detalle_columnas_afectadas && (
-              <p>
-                Columnas afectadas: <b>{alert.detalle_columnas_afectadas}</b>
-              </p>
-            )}
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(0,0,0,0.4)",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center", // centrado vertical
+        zIndex: 9998,
+      }}
+    >
+      <div
+        style={{
+          width: "100%",
+          maxWidth: 560,
+          borderRadius: 14, // igual a dashboard
+          background: "#fff",
+          // sombra suave similar al dashboard
+          boxShadow: "0 4px 18px rgba(30, 80, 60, 0.1)",
+          zIndex: 9999,
+          border: "1px solid rgba(30, 80, 60, 0.18)",
+          overflow: "hidden",
+          fontFamily: 'Inter, "Segoe UI", Arial, sans-serif',
+          color: "#184d2b",
+        }}
+      >
+        <div style={{ padding: "12px 16px", display: "flex", alignItems: "center", gap: 10 }}>
+          <div
+            // franja indicadora del tipo a la izquierda
+            style={{
+              width: 6,
+              alignSelf: "stretch",
+              borderRadius: 4,
+              background:
+                alert.level === "critical"
+                  ? "#f03e3e"
+                  : alert.level === "warning"
+                  ? "#f59f00"
+                  : "#1e90ff",
+            }}
+          />
+          <div style={{ display: "flex", alignItems: "center", gap: 8, fontWeight: 700 }}>
+            <span aria-hidden style={{ fontSize: 18 }}>{theme.icon}</span>
+            <span style={{ fontSize: 14 }}>{theme.label}</span>
           </div>
-        )}
+        </div>
 
-        <div className="mt-4 flex gap-2 justify-end">
-          <button
-            onClick={onClose}
-            className="rounded-md bg-gray-200 px-3 py-1 text-sm"
-          >
-            Cerrar
-          </button>
+        <div style={{ padding: 16 }}>
+          <h3 style={{ margin: 0, marginBottom: 8, fontSize: 18, fontWeight: 700, color: "#184d2b" }}>
+            {alert.title}
+          </h3>
+          <p style={{ margin: 0, marginBottom: 8, fontSize: 14 }}>{alert.message}</p>
+
+          {alert.value !== undefined && alert.value !== null && (
+            <p style={{ margin: 0, marginBottom: 8, fontSize: 12, color: "#475569" }}>
+              {alert.variable}: <b>{String(alert.value)}</b>
+              {alert.ts ? ` - ${alert.ts}` : ""}
+            </p>
+          )}
+
+          {(alert.detalle_tipo_alerta ||
+            alert.detalle_fecha_hora_alerta ||
+            alert.detalle_valor_anomalo !== undefined ||
+            alert.detalle_columnas_afectadas) && (
+            <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #e5e7eb", fontSize: 12, color: "#334155" }}>
+              {alert.detalle_tipo_alerta && (
+                <p style={{ margin: 0, marginBottom: 4 }}>
+                  Tipo de alerta: <b>{alert.detalle_tipo_alerta}</b>
+                </p>
+              )}
+              {alert.detalle_fecha_hora_alerta && (
+                <p style={{ margin: 0, marginBottom: 4 }}>
+                  Fecha/Hora: <b>{alert.detalle_fecha_hora_alerta}</b>
+                </p>
+              )}
+              {typeof alert.detalle_valor_anomalo !== "undefined" && alert.detalle_valor_anomalo !== null && (
+                <p style={{ margin: 0, marginBottom: 4 }}>
+                  Valor anomalo: <b>{String(alert.detalle_valor_anomalo)}</b>
+                </p>
+              )}
+              {alert.detalle_columnas_afectadas && (
+                <p style={{ margin: 0 }}>
+                  Columnas afectadas: <b>{alert.detalle_columnas_afectadas}</b>
+                </p>
+              )}
+            </div>
+          )}
+
+          <div style={{ marginTop: 16, display: "flex", justifyContent: "flex-end", gap: 8 }}>
+            <button onClick={onClose} className="dashboard-btn-blue">Aceptar</button>
+          </div>
         </div>
       </div>
     </div>
