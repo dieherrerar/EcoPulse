@@ -1,0 +1,9 @@
+      { id_grafico: 2, titulo_grafico: "Relación CO₂ vs Temperatura", activo: 1 },
+      { id_grafico: 3, titulo_grafico: "Barras PM Promedio", activo: 1 },
+      { id_grafico: 4, titulo_grafico: "Distribución de Partículas", activo: 1 },
+      { id_grafico: 5, titulo_grafico: "CO₂ vs Consumo en el tiempo", activo: 1 },
+      { id_grafico: 6, titulo_grafico: "Serie temporal CO₂", activo: 1 },
+      { id_grafico: 7, titulo_grafico: "Serie temporal PM2.5", activo: 1 },
+      { id_grafico: 8, titulo_grafico: "Serie temporal Temperatura", activo: 1 },
+      { id_grafico: 9, titulo_grafico: "Serie temporal Humedad", activo: 1 },
+    ];

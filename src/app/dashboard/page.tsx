@@ -59,6 +59,10 @@ const DashboardPage: NextPage = () => {
     BarChartComp: true,
     LineChartComp: true,
     PieChartComp: true,
+    CO2TimeSeriesChart: true,
+    PM25TimeSeriesChart: true,
+    TempTimeSeriesChart: true,
+    HumidityTimeSeriesChart: true,
   });
   const [draft, setDraft] = useState<GraficoItem[]>([]);
   const [saving, setSaving] = useState(false);
@@ -147,10 +151,14 @@ const DashboardPage: NextPage = () => {
     if (graficos.length === 0) return;
     const byId = new Map(graficos.map((g) => [Number(g.id_grafico), g.activo]));
     setChartVisibility({
-      AreaChartComp: byId.get(5) === 1,
-      BarChartComp: byId.get(3) === 1,
-      LineChartComp: byId.get(2) === 1,
-      PieChartComp: byId.get(4) === 1,
+      AreaChartComp: (byId.get(5) ?? 1) === 1,
+      BarChartComp: (byId.get(3) ?? 1) === 1,
+      LineChartComp: (byId.get(2) ?? 1) === 1,
+      PieChartComp: (byId.get(4) ?? 1) === 1,
+      CO2TimeSeriesChart: (byId.get(7) ?? 1) === 1,
+      PM25TimeSeriesChart: (byId.get(8) ?? 1) === 1,
+      TempTimeSeriesChart: (byId.get(9) ?? 1) === 1,
+      HumidityTimeSeriesChart: (byId.get(10) ?? 1) === 1,
     });
   }, [graficos]);
 
@@ -439,68 +447,76 @@ const DashboardPage: NextPage = () => {
           </div>
 
           {/* Serie temporal CO2 vs tiempo */}
-          <div className="row g-3 mt-1">
-            <div className="col-12">
-              <div className="dashboard-chart-container">
-                <CO2TimeSeriesChart
-                  data={data.timeseries}
-                  xKey="timestamp_registro"
-                  yKey="co2_mhz19"
-                  resampleMinutes={30}
-                  showDots={false}
-                  compactX
-                />
+          {chartVisibility.CO2TimeSeriesChart && (
+            <div className="row g-3 mt-1">
+              <div className="col-12">
+                <div className="dashboard-chart-container">
+                  <CO2TimeSeriesChart
+                    data={data.timeseries}
+                    xKey="timestamp_registro"
+                    yKey="co2_mhz19"
+                    resampleMinutes={30}
+                    showDots={false}
+                    compactX
+                  />
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Serie temporal PM2.5 (AtE) vs tiempo */}
-          <div className="row g-3 mt-1">
-            <div className="col-12">
-              <div className="dashboard-chart-container">
-                <PM25TimeSeriesChart
-                  data={data.timeseries}
-                  xKey="timestamp_registro"
-                  yKey={"mp2.5_ate" as any}
-                  resampleMinutes={30}
-                  showDots={false}
-                  compactX
-                />
+          {chartVisibility.PM25TimeSeriesChart && (
+            <div className="row g-3 mt-1">
+              <div className="col-12">
+                <div className="dashboard-chart-container">
+                  <PM25TimeSeriesChart
+                    data={data.timeseries}
+                    xKey="timestamp_registro"
+                    yKey={"mp2.5_ate" as any}
+                    resampleMinutes={30}
+                    showDots={false}
+                    compactX
+                  />
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Serie temporal Temperatura vs tiempo */}
-          <div className="row g-3 mt-1">
-            <div className="col-12">
-              <div className="dashboard-chart-container">
-                <TempTimeSeriesChart
-                  data={data.timeseries}
-                  xKey="timestamp_registro"
-                  yKey={"tem_bme280" as any}
-                  resampleMinutes={30}
-                  showDots={false}
-                  compactX
-                />
+          {chartVisibility.TempTimeSeriesChart && (
+            <div className="row g-3 mt-1">
+              <div className="col-12">
+                <div className="dashboard-chart-container">
+                  <TempTimeSeriesChart
+                    data={data.timeseries}
+                    xKey="timestamp_registro"
+                    yKey={"tem_bme280" as any}
+                    resampleMinutes={30}
+                    showDots={false}
+                    compactX
+                  />
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Serie temporal Humedad vs tiempo */}
-          <div className="row g-3 mt-1">
-            <div className="col-12">
-              <div className="dashboard-chart-container">
-                <HumidityTimeSeriesChart
-                  data={data.timeseries}
-                  xKey="timestamp_registro"
-                  yKey={"hum_bme280" as any}
-                  resampleMinutes={30}
-                  showDots={false}
-                  compactX
-                />
+          {chartVisibility.HumidityTimeSeriesChart && (
+            <div className="row g-3 mt-1">
+              <div className="col-12">
+                <div className="dashboard-chart-container">
+                  <HumidityTimeSeriesChart
+                    data={data.timeseries}
+                    xKey="timestamp_registro"
+                    yKey={"hum_bme280" as any}
+                    resampleMinutes={30}
+                    showDots={false}
+                    compactX
+                  />
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Si no es admin, mostrar botones de descarga. */}
           {!isAdmin && (
