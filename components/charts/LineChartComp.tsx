@@ -20,6 +20,9 @@ interface LineChartCompProps<T = any> {
   xLabel?: string;
   yLabel?: string;
   xType?: XType;
+  omitZeroY?: boolean;
+  compactX?: boolean;
+  xTickFormatter?: (value: any) => string;
 }
 
 export default function LineChartComp<T>(props: LineChartCompProps) {
@@ -32,6 +35,9 @@ export default function LineChartComp<T>(props: LineChartCompProps) {
     xLabel,
     yLabel,
     xType = "category",
+    omitZeroY = false,
+    compactX = false,
+    xTickFormatter,
   } = props;
 
   const xDataKey = String(xKey);
@@ -45,6 +51,7 @@ export default function LineChartComp<T>(props: LineChartCompProps) {
       const yRaw = item?.[yDataKey];
       const yNum = typeof yRaw === "string" ? parseFloat(yRaw) : yRaw;
       if (yNum === -999 || Number.isNaN(yNum)) return false;
+      if (omitZeroY && Number(yNum) === 0) return false;
 
       const xRaw = item?.[xDataKey];
       if (xType === "number") {
@@ -65,7 +72,7 @@ export default function LineChartComp<T>(props: LineChartCompProps) {
       });
     }
     return clean;
-  }, [data, xDataKey, yDataKey, xType]);
+  }, [data, xDataKey, yDataKey, xType, omitZeroY]);
 
   return (
     <div className="Line-card p-2 h-100">
@@ -73,15 +80,16 @@ export default function LineChartComp<T>(props: LineChartCompProps) {
       <div className="Line-card-body p-2">
         <ResponsiveContainer width="100%" height={height}>
           <LineChart
-            data={filteredData}
+            data={compactX ? filteredData.map((it: any) => ({ ...it, __xLabel: String(it?.[xDataKey]) })) : filteredData}
             margin={{ top: 10, right: 20, bottom: 10, left: 10 }}
           >
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
-              type={xType}
-              dataKey={String(xKey)}
-              domain={xType === "number" ? ["auto", "auto"] : undefined}
+              type={compactX ? "category" : xType}
+              dataKey={compactX ? "__xLabel" : String(xKey)}
+              domain={(compactX ? "category" : xType) === "number" ? ["auto", "auto"] : undefined}
               tick={{ fontSize: 12 }}
+              tickFormatter={xTickFormatter}
               label={{
                 value: xLabel,
                 angle: 0,

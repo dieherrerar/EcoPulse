@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef } from "react";
 import type { NextPage } from "next";
 import KpiCard from "../../../components/KpiCard";
 import LineChartComp from "../../../components/charts/LineChartComp";
+import CO2TimeSeriesChart from "../../../components/charts/CO2TimeSeriesChart";
 import BarChartComp from "../../../components/charts/BarChartComp";
 import PieChartComp from "../../../components/charts/PieChartComp";
 import AreaChartComp from "../../../components/charts/AreaChartComp";
@@ -432,6 +433,22 @@ const DashboardPage: NextPage = () => {
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Serie temporal CO2 vs tiempo */}
+          <div className="row g-3 mt-1">
+            <div className="col-12">
+              <div className="dashboard-chart-container">
+                <CO2TimeSeriesChart
+                  data={data.timeseries}
+                  xKey="timestamp_registro"
+                  yKey="co2_mhz19"
+                  resampleMinutes={30}
+                  showDots={false}
+                  compactX
+                />
+              </div>
+            </div>
           </div>
 
           {/* Si no es admin, mostrar botones de descarga. */}

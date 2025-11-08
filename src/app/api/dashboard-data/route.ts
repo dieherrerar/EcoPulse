@@ -24,13 +24,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const rows = result.rows;
-
-    if (!rows || rows.length === 0) {
-      return new Response(JSON.stringify({ error: "No Data Found" }), {
-        status: 404,
-      });
-    }
+    const rows = result.rows || [];
 
     // Helpers
     const round2 = (n: number) => Math.round(n * 100) / 100;
@@ -97,9 +91,11 @@ export async function GET(req: NextRequest) {
 
     const timeseries = rows.map((row) => ({
       date: row.fecha_registro,
+      timestamp_registro: (row as any).timestamp_registro ?? row.fecha_registro,
       pm25: round2(parseFloat(row["mp2.5_stp"] || "0")),
       temp: round2(parseFloat(row["tem_bme280"] || "0")),
       co2: round2(parseFloat(row["co2_mhz19"] || "0")),
+      co2_mhz19: round2(parseFloat(row["co2_mhz19"] || "0")),
     }));
 
     const totalMP = rows.reduce((acc, row) => {

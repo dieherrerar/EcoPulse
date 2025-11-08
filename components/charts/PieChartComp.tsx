@@ -41,7 +41,7 @@ export default function PieChartComp(props: PieChartCompProps) {
         const raw = d?.[vK];
         const num = typeof raw === "string" ? parseFloat(raw) : raw;
         if (name === undefined || name === null || name === "") return false;
-        if (num === -999 || Number.isNaN(num)) return false;
+        if (num === -999 || Number.isNaN(num) || Number(num) === 0) return false;
         return true;
       })
       .map((d) => ({
