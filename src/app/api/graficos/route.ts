@@ -4,7 +4,7 @@ import { query } from "../../lib/db";
 export async function GET() {
   try {
     const result = await query(
-      "SELECT id_grafico, titulo_grafico, activo FROM grafico WHERE id_grafico BETWEEN 2 AND 10 ORDER BY id_grafico ASC;"
+      "SELECT id_grafico, titulo_grafico, activo FROM grafico WHERE id_grafico BETWEEN 2 AND 11 ORDER BY id_grafico ASC;"
     );
 
     const dbRows = result.rows as Array<{ id_grafico: number; titulo_grafico: string; activo: number }>;
@@ -39,7 +39,7 @@ export async function GET() {
         titulo_grafico: r?.titulo_grafico ?? d?.titulo_grafico ?? `Gráfico ${id}`,
         activo: typeof r?.activo === "number" ? r!.activo : d?.activo ?? 1,
       };
-      titles[10] = "Serie temporal Humedad";
+            
     });
 
     return NextResponse.json({ success: true, data: merged });
@@ -74,7 +74,7 @@ export async function PUT(req: Request) {
 
     try {
       await query("BEGIN;");
-      const titles: Record<number, string> = {
+      let titles: Record<number, string> = {
         2: "Relación CO₂ vs Temperatura",
         3: "Barras PM Promedio",
         4: "Distribución de Partículas",
@@ -84,6 +84,8 @@ export async function PUT(req: Request) {
         8: "Serie temporal Temperatura",
         9: "Serie temporal Humedad",
       };
+      (titles as any)[10] = "Serie temporal Humedad";
+      (titles as any)[11] = "PM2.5 promedio por dia de semana";
       for (const { id_grafico, activo } of body) {
         const upd = await query(
           `UPDATE grafico

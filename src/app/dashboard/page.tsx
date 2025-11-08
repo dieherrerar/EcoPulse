@@ -64,6 +64,7 @@ const DashboardPage: NextPage = () => {
     PM25TimeSeriesChart: true,
     TempTimeSeriesChart: true,
     HumidityTimeSeriesChart: true,
+    PM25WeekdayBarChart: true,
   });
   const [draft, setDraft] = useState<GraficoItem[]>([]);
   const [saving, setSaving] = useState(false);
@@ -160,6 +161,7 @@ const DashboardPage: NextPage = () => {
       PM25TimeSeriesChart: (byId.get(8) ?? 1) === 1,
       TempTimeSeriesChart: (byId.get(9) ?? 1) === 1,
       HumidityTimeSeriesChart: (byId.get(10) ?? 1) === 1,
+      PM25WeekdayBarChart: (byId.get(11) ?? 1) === 1,
     });
   }, [graficos]);
 
@@ -374,7 +376,7 @@ const DashboardPage: NextPage = () => {
             </div>
             <div className="col-6 col-md-3">
               <KpiCard
-                title="CO₂ máximo"
+                title="CO2 promedio"
                 value={kpis?.avgCO2 ?? "-"}
                 subtitle="ppm"
               />
@@ -390,6 +392,13 @@ const DashboardPage: NextPage = () => {
 
           {/* Gráficos */}
           <div className="row g-3">
+            {chartVisibility.PM25WeekdayBarChart && (
+              <div className="col-12 col-lg-6">
+                <div className="dashboard-chart-container">
+                  <PM25WeekdayBarChart data={data.timeseries} />
+                </div>
+              </div>
+            )}
             {chartVisibility.LineChartComp && (
               <div className="col-12 col-lg-6">
                 <div className="dashboard-chart-container">
@@ -519,15 +528,6 @@ const DashboardPage: NextPage = () => {
             </div>
           )}
 
-          {/* Barras: PM2.5 promedio por día de semana */}
-          <div className="row g-3 mt-1">
-            <div className="col-12">
-              <div className="dashboard-chart-container">
-                <PM25WeekdayBarChart data={data.timeseries} />
-              </div>
-            </div>
-          </div>
-
           {/* Si no es admin, mostrar botones de descarga. */}
           {!isAdmin && (
             <div className="mb-4 d-flex gap-3 flex-wrap">
@@ -583,3 +583,4 @@ const DashboardPage: NextPage = () => {
 };
 
 export default DashboardPage;
+

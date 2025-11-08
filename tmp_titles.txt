@@ -1,0 +1,11 @@
+      const titles: Record<number, string> = {
+        2: "Relación CO₂ vs Temperatura",
+        3: "Barras PM Promedio",
+        4: "Distribución de Partículas",
+        5: "CO₂ vs Consumo en el tiempo",
+        6: "Serie temporal CO₂",
+        7: "Serie temporal PM2.5",
+        8: "Serie temporal Temperatura",
+        9: "Serie temporal Humedad",
+      };
+      for (const { id_grafico, activo } of body) {
