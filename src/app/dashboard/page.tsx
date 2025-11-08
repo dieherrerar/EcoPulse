@@ -11,6 +11,7 @@ import PieChartComp from "../../../components/charts/PieChartComp";
 import AreaChartComp from "../../../components/charts/AreaChartComp";
 import TempTimeSeriesChart from "../../../components/charts/TempTimeSeriesChart";
 import HumidityTimeSeriesChart from "../../../components/charts/HumidityTimeSeriesChart";
+import PM25WeekdayBarChart from "../../../components/charts/PM25WeekdayBarChart";
 import type {
   CompositionDatum,
   DashboardPayload,
@@ -374,7 +375,7 @@ const DashboardPage: NextPage = () => {
             <div className="col-6 col-md-3">
               <KpiCard
                 title="CO₂ máximo"
-                value={kpis?.maxCO2 ?? "-"}
+                value={kpis?.avgCO2 ?? "-"}
                 subtitle="ppm"
               />
             </div>
@@ -517,6 +518,15 @@ const DashboardPage: NextPage = () => {
               </div>
             </div>
           )}
+
+          {/* Barras: PM2.5 promedio por día de semana */}
+          <div className="row g-3 mt-1">
+            <div className="col-12">
+              <div className="dashboard-chart-container">
+                <PM25WeekdayBarChart data={data.timeseries} />
+              </div>
+            </div>
+          </div>
 
           {/* Si no es admin, mostrar botones de descarga. */}
           {!isAdmin && (

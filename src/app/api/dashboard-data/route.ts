@@ -74,6 +74,7 @@ export async function GET(req: NextRequest) {
     const avgPM10 = avgOf("mp10_ate");
     const avgTemp = avgOf("tem_bme280");
     const maxCO2 = maxOf("co2_mhz19");
+    const avgCO2 = avgOf("co2_mhz19");
     const aguaCaida = sumOf("agua_caida");
 
     const totalConsumo = (() => {
@@ -87,7 +88,7 @@ export async function GET(req: NextRequest) {
       return any ? round2(sum) : -999;
     })();
 
-    const kpis = { avgPM25, avgPM10, avgTemp, maxCO2, aguaCaida };
+    const kpis = { avgPM25, avgPM10, avgTemp, maxCO2, avgCO2, aguaCaida };
 
     const timeseries = rows.map((row) => ({
       date: row.fecha_registro,

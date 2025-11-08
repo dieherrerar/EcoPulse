@@ -4,6 +4,7 @@ export interface KPIs {
   avgTemp: number;
   avgPM10: number;
   maxCO2: number;
+  avgCO2: number;
   aguaCaida: number;
 }
 
