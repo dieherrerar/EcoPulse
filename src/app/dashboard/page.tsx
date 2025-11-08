@@ -295,6 +295,17 @@ const DashboardPage: NextPage = () => {
 
   const { kpis, composition, stacked } = data;
 
+  const kpisForPdf = [
+    { id_kpi: 1, label: "MP2.5_ATE promedio hoy", value: kpis?.avgPM25 ?? "-" },
+    { id_kpi: 2, label: "Temperatura promedio", value: kpis?.avgTemp ?? "-" },
+    { id_kpi: 3, label: "CO₂ máximo", value: kpis?.maxCO2 ?? "-" },
+    {
+      id_kpi: 4,
+      label: "Precipitación acumulada",
+      value: kpis?.aguaCaida ?? "-",
+    },
+  ];
+
   return (
     <div className="container py-4">
       {toast.show && (
@@ -359,7 +370,7 @@ const DashboardPage: NextPage = () => {
       <div className="row">
         <div className={isAdmin ? "col-12 col-lg-9" : "col-12"}>
           {/* KPIs */}
-          <div className="row g-3 mb-3">
+          <div id="kpis-dashboard" className="row g-3 mb-3">
             <div className="col-6 col-md-3">
               <KpiCard
                 title="MP2.5_ATE promedio"
@@ -401,7 +412,7 @@ const DashboardPage: NextPage = () => {
             )}
             {chartVisibility.LineChartComp && (
               <div className="col-12 col-lg-6">
-                <div className="dashboard-chart-container">
+                <div id="chart-line" className="dashboard-chart-container">
                   <LineChartComp
                     data={data.tempCo2Trend}
                     xKey="tempBin"
@@ -417,7 +428,7 @@ const DashboardPage: NextPage = () => {
 
             {chartVisibility.BarChartComp && (
               <div className="col-12 col-lg-6">
-                <div className="dashboard-chart-container">
+                <div id="chart-bar" className="dashboard-chart-container">
                   <BarChartComp
                     data={pm25Bars}
                     title={`PM promedio del día vs límite OMS`}
@@ -428,7 +439,7 @@ const DashboardPage: NextPage = () => {
 
             {chartVisibility.PieChartComp && (
               <div className="col-12 col-lg-6">
-                <div className="dashboard-chart-container">
+                <div id="chart-pie" className="dashboard-chart-container">
                   <PieChartComp
                     title="Distribución porcentual de partículas MP"
                     data={composition}
@@ -441,7 +452,7 @@ const DashboardPage: NextPage = () => {
 
             {chartVisibility.AreaChartComp && (
               <div className="col-12 col-lg-6">
-                <div className="dashboard-chart-container">
+                <div id="chart-area" className="dashboard-chart-container">
                   <AreaChartComp
                     data={stacked}
                     xKey="date"
@@ -533,23 +544,25 @@ const DashboardPage: NextPage = () => {
             <div className="mb-4 d-flex gap-3 flex-wrap">
               <DownloadButton label="Extraer reporte CSV" start={appliedStartDate} end={appliedEndDate} />
               <DownloadPDF
-                targetId="container py-4"
-                fileName={"eco_dashboard_" + appliedStartDate + "_a_" + appliedEndDate}
-                hideSelectors={[
-                  "#fecha",
-                  ".dashboard-btn-blue",
-                  ".download-controls",
-                  "#table-responsive mt-3 mb-5 dashboard-chart-container",
-                  "#mt-5 mb-3",
-                  "#mb-4 d-flex gap-3 flex-wrap",
-                ]}
-                btnClassName="dashboard-btn-blue"
+                date={selectedDate}
+                kpis={kpisForPdf}
+                graficos={graficos}
+                chartNodeIds={{
+                  2: "#chart-line",
+                  3: "#chart-bar",
+                  4: "#chart-pie",
+                  5: "#chart-area",
+                }}
+                kpiNodeId="#kpis-dashboard"
               />
             </div>
           )}
 
           <h2 className="mt-5 mb-3">Diccionario de Datos</h2>
-          <div className="table-responsive mt-3 mb-5 dashboard-chart-container">
+          <div
+            id="diccionario-datos"
+            className="table-responsive mt-3 mb-5 dashboard-chart-container"
+          >
             <Table datos={datosDiccionario} />
           </div>
 
