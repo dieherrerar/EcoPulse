@@ -5,9 +5,12 @@ import type { NextPage } from "next";
 import KpiCard from "../../../components/KpiCard";
 import LineChartComp from "../../../components/charts/LineChartComp";
 import CO2TimeSeriesChart from "../../../components/charts/CO2TimeSeriesChart";
+import PM25TimeSeriesChart from "../../../components/charts/PM25TimeSeriesChart";
 import BarChartComp from "../../../components/charts/BarChartComp";
 import PieChartComp from "../../../components/charts/PieChartComp";
 import AreaChartComp from "../../../components/charts/AreaChartComp";
+import TempTimeSeriesChart from "../../../components/charts/TempTimeSeriesChart";
+import HumidityTimeSeriesChart from "../../../components/charts/HumidityTimeSeriesChart";
 import type {
   CompositionDatum,
   DashboardPayload,
@@ -443,6 +446,54 @@ const DashboardPage: NextPage = () => {
                   data={data.timeseries}
                   xKey="timestamp_registro"
                   yKey="co2_mhz19"
+                  resampleMinutes={30}
+                  showDots={false}
+                  compactX
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Serie temporal PM2.5 (AtE) vs tiempo */}
+          <div className="row g-3 mt-1">
+            <div className="col-12">
+              <div className="dashboard-chart-container">
+                <PM25TimeSeriesChart
+                  data={data.timeseries}
+                  xKey="timestamp_registro"
+                  yKey={"mp2.5_ate" as any}
+                  resampleMinutes={30}
+                  showDots={false}
+                  compactX
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Serie temporal Temperatura vs tiempo */}
+          <div className="row g-3 mt-1">
+            <div className="col-12">
+              <div className="dashboard-chart-container">
+                <TempTimeSeriesChart
+                  data={data.timeseries}
+                  xKey="timestamp_registro"
+                  yKey={"tem_bme280" as any}
+                  resampleMinutes={30}
+                  showDots={false}
+                  compactX
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Serie temporal Humedad vs tiempo */}
+          <div className="row g-3 mt-1">
+            <div className="col-12">
+              <div className="dashboard-chart-container">
+                <HumidityTimeSeriesChart
+                  data={data.timeseries}
+                  xKey="timestamp_registro"
+                  yKey={"hum_bme280" as any}
                   resampleMinutes={30}
                   showDots={false}
                   compactX

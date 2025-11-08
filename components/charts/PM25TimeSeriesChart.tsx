@@ -11,10 +11,10 @@ import {
 
 type AnyRecord = Record<string, any>;
 
-export interface CO2TimeSeriesChartProps<T extends AnyRecord = AnyRecord> {
+export interface PM25TimeSeriesChartProps<T extends AnyRecord = AnyRecord> {
   data: T[];
   xKey?: keyof T; // defaults to 'timestamp_registro'
-  yKey?: keyof T; // defaults to 'co2_mhz19'
+  yKey?: keyof T; // defaults to 'mp2.5_ate'
   height?: number | string;
   title?: string;
   xLabel?: string;
@@ -44,17 +44,17 @@ function defaultTickFormat(d: Date): string {
   return `${dd}/${mm} ${hh}:${mi} ${suffix}`;
 }
 
-export default function CO2TimeSeriesChart<T extends AnyRecord = AnyRecord>(
-  props: CO2TimeSeriesChartProps<T>
+export default function PM25TimeSeriesChart<T extends AnyRecord = AnyRecord>(
+  props: PM25TimeSeriesChartProps<T>
 ) {
   const {
     data,
     xKey = "timestamp_registro" as keyof T,
-    yKey = "co2_mhz19" as keyof T,
+    yKey = "mp2.5_ate" as keyof T,
     height = 260,
-    title = "CO2 en el tiempo",
+    title = "PM2.5 en el tiempo",
     xLabel = "Fecha/Hora",
-    yLabel = "CO2 (ppm)",
+    yLabel = "PM2.5 (µg/m³)",
     tickFormat = defaultTickFormat,
     showDots = false,
     dotSize = 2,
@@ -74,7 +74,6 @@ export default function CO2TimeSeriesChart<T extends AnyRecord = AnyRecord>(
         const raw = it[xDataKey];
         let ms: number | null = null;
         if (typeof raw === "number") {
-          // assume epoch milliseconds or seconds
           ms = raw > 1e12 ? raw : raw * 1000;
         } else if (typeof raw === "string") {
           const t = Date.parse(raw);
@@ -102,7 +101,7 @@ export default function CO2TimeSeriesChart<T extends AnyRecord = AnyRecord>(
 
     if (!intervalMs) return sorted;
 
-    // Group by bin start time and average values
+    // Agrupar por bin de tiempo y promediar valores
     const groups = new Map<number, { sum: number; count: number }>();
     for (const item of sorted) {
       const ms = item.__xMs as number;
@@ -118,10 +117,10 @@ export default function CO2TimeSeriesChart<T extends AnyRecord = AnyRecord>(
       .sort((a, b) => a[0] - b[0])
       .map(([bin, g]) => ({ __xMs: bin, [yDataKey]: g.sum / Math.max(1, g.count) }));
 
-    // Optionally fill long gaps with zeros so the line drops to 0
+    // Rellenar huecos largos con ceros si se pide
     if (!fillGapsToZero || resampled.length <= 1) return resampled;
 
-    const gapMs = intervalMs * 2; // gap threshold = 2 bins sin datos
+    const gapMs = intervalMs * 2; // umbral = 2 bins sin datos
     const withZeros: AnyRecord[] = [];
     for (let i = 0; i < resampled.length - 1; i++) {
       const cur = resampled[i];
@@ -189,7 +188,7 @@ export default function CO2TimeSeriesChart<T extends AnyRecord = AnyRecord>(
     let min = Math.min(...ys);
     let max = Math.max(...ys);
     const range = max - min;
-    // Aumenta el margen: 10% del rango (antes 5%); si rango=0, 10% del valor o mínimo 1
+    // 10% de margen; si rango=0, 10% del valor o mínimo 1
     const pad = range === 0 ? Math.max(Math.abs(max) * 0.1, 1) : range * 0.1;
     return [min - pad, max + pad] as [number, number];
   }, [processed, yDataKey]);
@@ -236,7 +235,7 @@ export default function CO2TimeSeriesChart<T extends AnyRecord = AnyRecord>(
             <Line
               type="linear"
               dataKey={yDataKey}
-              stroke="#198754"
+              stroke="#0d6efd"
               strokeWidth={2}
               dot={showDots ? { r: dotSize } : false}
               connectNulls
@@ -248,3 +247,4 @@ export default function CO2TimeSeriesChart<T extends AnyRecord = AnyRecord>(
     </div>
   );
 }
+

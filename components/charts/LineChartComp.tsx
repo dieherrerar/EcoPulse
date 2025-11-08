@@ -74,6 +74,65 @@ export default function LineChartComp<T>(props: LineChartCompProps) {
     return clean;
   }, [data, xDataKey, yDataKey, xType, omitZeroY]);
 
+  // Calcula ticks uniformes (máximo 10) para el eje X (fechas/categorías)
+  const xTicks = useMemo(() => {
+    const n = filteredData.length;
+    const labelKey = compactX ? "__xLabel" : xDataKey;
+
+    if (n === 0) return [] as any[];
+
+    // Si hay 10 o menos, usa todos los valores únicos
+    if (n <= 10) {
+      const set = new Set<any>();
+      const ticks: any[] = [];
+      for (const it of filteredData) {
+        const v = String(it?.[xDataKey]);
+        if (!set.has(v)) {
+          set.add(v);
+          // Si compactX, el dato real en el chart será __xLabel = String(original)
+          ticks.push(compactX ? String(v) : (xType === "number" ? Number(it?.[xDataKey]) : v));
+        }
+      }
+      return ticks;
+    }
+
+    // Más de 10: elige 10 índices uniformemente distribuidos (incluye extremos)
+    const indices: number[] = [];
+    for (let i = 0; i < 10; i++) {
+      const idx = Math.round((i * (n - 1)) / 9);
+      if (indices.length === 0 || indices[indices.length - 1] !== idx) {
+        indices.push(idx);
+      }
+    }
+
+    return indices.map((i) => {
+      const raw = filteredData[i]?.[xDataKey];
+      if (xType === "number") return Number(raw);
+      return compactX ? String(raw) : raw;
+    });
+  }, [filteredData, xDataKey, xType, compactX]);
+
+  // Calcula dominio Y con margen para evitar valores en el borde
+  const yDomain = useMemo(() => {
+    if (!filteredData.length) return [0, 1] as [number, number];
+    const ys = filteredData
+      .map((it: any) => {
+        const v = it?.[yDataKey];
+        return typeof v === "string" ? parseFloat(v) : (v as number);
+      })
+      .filter((v) => Number.isFinite(v));
+
+    if (!ys.length) return [0, 1] as [number, number];
+
+    let min = Math.min(...ys);
+    let max = Math.max(...ys);
+    if (!Number.isFinite(min) || !Number.isFinite(max)) return [0, 1] as [number, number];
+
+    const range = max - min;
+    const pad = range === 0 ? Math.max(Math.abs(max) * 0.1, 1) : range * 0.05; // 5% margen o 10% si rango = 0
+    return [min - pad, max + pad] as [number, number];
+  }, [filteredData, yDataKey]);
+
   return (
     <div className="Line-card p-2 h-100">
       <div className="small text-muted">{title}</div>
@@ -90,6 +149,9 @@ export default function LineChartComp<T>(props: LineChartCompProps) {
               domain={(compactX ? "category" : xType) === "number" ? ["auto", "auto"] : undefined}
               tick={{ fontSize: 12 }}
               tickFormatter={xTickFormatter}
+              // 10 ticks uniformes en eje X (si es numérico, se intenta con tickCount)
+              tickCount={(compactX ? "category" : xType) === "number" ? 10 : undefined}
+              ticks={(compactX ? "category" : xType) === "number" ? undefined : (xTicks as any)}
               label={{
                 value: xLabel,
                 angle: 0,
@@ -98,13 +160,21 @@ export default function LineChartComp<T>(props: LineChartCompProps) {
               }}
             />
             <YAxis
+              allowDecimals
+              tickFormatter={(v: any) => {
+                const num = typeof v === "number" ? v : parseFloat(v);
+                return Number.isFinite(num) ? num.toFixed(1) : v;
+              }}
+              domain={yDomain as [number, number]}
               label={{ value: yLabel, angle: -90, position: "insideLeft" }}
             />
             <Tooltip
-              formatter={(value: any, name) => [
-                value,
-                name === yDataKey ? yLabel ?? yDataKey : String(name),
-              ]}
+              formatter={(value: any, name) => {
+                const num = typeof value === "number" ? value : parseFloat(value);
+                const formatted = Number.isFinite(num) ? num.toFixed(1) : value;
+                const label = name === yDataKey ? yLabel ?? yDataKey : String(name);
+                return [formatted, label];
+              }}
             />
             <Line
               type="monotone"

@@ -11,29 +11,24 @@ import {
 
 type AnyRecord = Record<string, any>;
 
-export interface CO2TimeSeriesChartProps<T extends AnyRecord = AnyRecord> {
+export interface TempTimeSeriesChartProps<T extends AnyRecord = AnyRecord> {
   data: T[];
   xKey?: keyof T; // defaults to 'timestamp_registro'
-  yKey?: keyof T; // defaults to 'co2_mhz19'
+  yKey?: keyof T; // defaults to 'tem_bme280'
   height?: number | string;
   title?: string;
   xLabel?: string;
   yLabel?: string;
   tickFormat?: (d: Date) => string;
-  // Opciones rápidas
-  showDots?: boolean; // false = oculta puntos
-  dotSize?: number; // tamaño de punto cuando showDots=true
-  // Re-muestreo por intervalo (minutos). 0/undefined = sin agrupar
-  resampleMinutes?: number; // p.ej. 30
-  // Cuando hay huecos de tiempo sin datos, insertar tramo a 0
-  fillGapsToZero?: boolean; // default false
-  // Tratar valores 0 como "faltantes" y conectar la línea
-  treatZeroAsMissing?: boolean; // default true
+  showDots?: boolean;
+  dotSize?: number;
+  resampleMinutes?: number;
+  fillGapsToZero?: boolean;
+  treatZeroAsMissing?: boolean;
   compactX?: boolean;
 }
 
 function defaultTickFormat(d: Date): string {
-  // dd/MM hh:mm am/pm (hora local)
   const dd = String(d.getDate()).padStart(2, "0");
   const mm = String(d.getMonth() + 1).padStart(2, "0");
   const H = d.getHours();
@@ -44,17 +39,17 @@ function defaultTickFormat(d: Date): string {
   return `${dd}/${mm} ${hh}:${mi} ${suffix}`;
 }
 
-export default function CO2TimeSeriesChart<T extends AnyRecord = AnyRecord>(
-  props: CO2TimeSeriesChartProps<T>
+export default function TempTimeSeriesChart<T extends AnyRecord = AnyRecord>(
+  props: TempTimeSeriesChartProps<T>
 ) {
   const {
     data,
     xKey = "timestamp_registro" as keyof T,
-    yKey = "co2_mhz19" as keyof T,
+    yKey = "tem_bme280" as keyof T,
     height = 260,
-    title = "CO2 en el tiempo",
+    title = "Temperatura en el tiempo",
     xLabel = "Fecha/Hora",
-    yLabel = "CO2 (ppm)",
+    yLabel = "Temperatura (°C)",
     tickFormat = defaultTickFormat,
     showDots = false,
     dotSize = 2,
@@ -74,7 +69,6 @@ export default function CO2TimeSeriesChart<T extends AnyRecord = AnyRecord>(
         const raw = it[xDataKey];
         let ms: number | null = null;
         if (typeof raw === "number") {
-          // assume epoch milliseconds or seconds
           ms = raw > 1e12 ? raw : raw * 1000;
         } else if (typeof raw === "string") {
           const t = Date.parse(raw);
@@ -102,7 +96,6 @@ export default function CO2TimeSeriesChart<T extends AnyRecord = AnyRecord>(
 
     if (!intervalMs) return sorted;
 
-    // Group by bin start time and average values
     const groups = new Map<number, { sum: number; count: number }>();
     for (const item of sorted) {
       const ms = item.__xMs as number;
@@ -118,10 +111,9 @@ export default function CO2TimeSeriesChart<T extends AnyRecord = AnyRecord>(
       .sort((a, b) => a[0] - b[0])
       .map(([bin, g]) => ({ __xMs: bin, [yDataKey]: g.sum / Math.max(1, g.count) }));
 
-    // Optionally fill long gaps with zeros so the line drops to 0
     if (!fillGapsToZero || resampled.length <= 1) return resampled;
 
-    const gapMs = intervalMs * 2; // gap threshold = 2 bins sin datos
+    const gapMs = intervalMs * 2;
     const withZeros: AnyRecord[] = [];
     for (let i = 0; i < resampled.length - 1; i++) {
       const cur = resampled[i];
@@ -150,7 +142,6 @@ export default function CO2TimeSeriesChart<T extends AnyRecord = AnyRecord>(
   const xDomainInner = compactX ? undefined : ["auto", "auto"] as const;
   const xTickFormatterInner = compactX ? undefined : ((v: number) => tickFormat(new Date(v)));
 
-  // Ticks uniformes para eje X (exactamente 10 cuando sea posible)
   const xTicks = useMemo(() => {
     if (compactX) {
       const n = categoricalData.length;
@@ -163,7 +154,6 @@ export default function CO2TimeSeriesChart<T extends AnyRecord = AnyRecord>(
       }
       return indices.map((i) => categoricalData[i]?.__xLabel);
     }
-    // Eje numérico: usar rango uniforme en milisegundos
     const n = processed.length;
     if (n === 0) return [] as number[];
     const minMs = processed[0].__xMs as number;
@@ -179,7 +169,6 @@ export default function CO2TimeSeriesChart<T extends AnyRecord = AnyRecord>(
     return ticks;
   }, [compactX, categoricalData, processed]);
 
-  // Dominio Y con margen para evitar bordes (no anclar a 0)
   const yDomain = useMemo(() => {
     if (!processed.length) return [0, 1] as [number, number];
     const ys = processed
@@ -189,7 +178,6 @@ export default function CO2TimeSeriesChart<T extends AnyRecord = AnyRecord>(
     let min = Math.min(...ys);
     let max = Math.max(...ys);
     const range = max - min;
-    // Aumenta el margen: 10% del rango (antes 5%); si rango=0, 10% del valor o mínimo 1
     const pad = range === 0 ? Math.max(Math.abs(max) * 0.1, 1) : range * 0.1;
     return [min - pad, max + pad] as [number, number];
   }, [processed, yDataKey]);
@@ -223,7 +211,6 @@ export default function CO2TimeSeriesChart<T extends AnyRecord = AnyRecord>(
             />
             <Tooltip
               labelFormatter={(v: any) => {
-                // Soporta tanto eje numérico (ms) como categórico (string)
                 if (typeof v === 'number') return tickFormat(new Date(v));
                 return String(v);
               }}
@@ -236,7 +223,7 @@ export default function CO2TimeSeriesChart<T extends AnyRecord = AnyRecord>(
             <Line
               type="linear"
               dataKey={yDataKey}
-              stroke="#198754"
+              stroke="#fd7e14"
               strokeWidth={2}
               dot={showDots ? { r: dotSize } : false}
               connectNulls
@@ -248,3 +235,4 @@ export default function CO2TimeSeriesChart<T extends AnyRecord = AnyRecord>(
     </div>
   );
 }
+

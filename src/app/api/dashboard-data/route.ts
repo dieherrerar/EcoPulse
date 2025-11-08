@@ -93,7 +93,10 @@ export async function GET(req: NextRequest) {
       date: row.fecha_registro,
       timestamp_registro: (row as any).timestamp_registro ?? row.fecha_registro,
       pm25: round2(parseFloat(row["mp2.5_stp"] || "0")),
+      "mp2.5_ate": round2(parseFloat((row as any)["mp2.5_ate"] || "0")),
       temp: round2(parseFloat(row["tem_bme280"] || "0")),
+      tem_bme280: round2(parseFloat((row as any)["tem_bme280"] || "0")),
+      hum_bme280: round2(parseFloat((row as any)["hum_bme280"] || "0")),
       co2: round2(parseFloat(row["co2_mhz19"] || "0")),
       co2_mhz19: round2(parseFloat(row["co2_mhz19"] || "0")),
     }));
