@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+﻿import React, { useMemo } from "react";
 import {
   ResponsiveContainer,
   PieChart,
@@ -30,25 +30,38 @@ export default function PieChartComp(props: PieChartCompProps) {
     height = 220,
   } = props;
 
-  // Filtra -999/NaN y nombres vacíos
+  const nameKeyStr = String(nameKey);
+  const valueKeyStr = String(valueKey);
+
+  // Filtra -999/NaN, valores 0 y nombres vacios
   const chartData = useMemo(() => {
     const arr = Array.isArray(data) ? data : [];
-    const nK = String(nameKey);
-    const vK = String(valueKey);
     return arr
       .filter((d: any) => {
-        const name = d?.[nK];
-        const raw = d?.[vK];
-        const num = typeof raw === "string" ? parseFloat(raw) : raw;
+        const name = d?.[nameKeyStr];
+        const raw = d?.[valueKeyStr];
+        const num = typeof raw === "string" ? parseFloat(raw) : Number(raw);
         if (name === undefined || name === null || name === "") return false;
-        if (num === -999 || Number.isNaN(num) || Number(num) === 0) return false;
+        if (num === -999 || Number.isNaN(num) || num === 0) return false;
         return true;
       })
-      .map((d) => ({
-        [nK]: (d as any)[nK],
-        [vK]: (d as any)[vK],
-      })) as { [key: string]: any }[];
-  }, [data, nameKey, valueKey]);
+      .map((d: any) => {
+        const raw = d?.[valueKeyStr];
+        const val = typeof raw === "string" ? parseFloat(raw) : Number(raw);
+        return {
+          [nameKeyStr]: d?.[nameKeyStr],
+          [valueKeyStr]: val,
+        } as { [key: string]: any };
+      });
+  }, [data, nameKeyStr, valueKeyStr]);
+
+  // Suma total para calcular % en el tooltip
+  const total = useMemo(() => {
+    return chartData.reduce((sum: number, d: any) => {
+      const v = typeof d?.[valueKeyStr] === "number" ? d[valueKeyStr] : Number(d?.[valueKeyStr]);
+      return sum + (Number.isFinite(v) ? Number(v) : 0);
+    }, 0);
+  }, [chartData, valueKeyStr]);
 
   return (
     <div className="pie-card p-2 h-100">
@@ -58,16 +71,27 @@ export default function PieChartComp(props: PieChartCompProps) {
           <PieChart>
             <Pie
               data={chartData}
-              dataKey={String(valueKey)}
-              nameKey={String(nameKey)}
+              dataKey={valueKeyStr}
+              nameKey={nameKeyStr}
               outerRadius={70}
-              label
+              label={(props: any) => {
+                const pct = typeof props?.percent === "number" ? props.percent * 100 : 0;
+                const name = props?.name ?? "";
+                return `${name} ${pct.toFixed(1)}%`;
+              }}
+              labelLine={false}
             >
-              {chartData.map((_, idx) => (
+              {chartData.map((_: any, idx: number) => (
                 <Cell key={`cell-${idx}`} fill={COLORS[idx % COLORS.length]} />
               ))}
             </Pie>
-            <Tooltip />
+            <Tooltip
+              formatter={(value: any, name: any) => {
+                const v = typeof value === "string" ? parseFloat(value) : Number(value);
+                const pct = total > 0 ? (v / total) * 100 : 0;
+                return [`${pct.toFixed(1)}%`, name];
+              }}
+            />
             <Legend />
           </PieChart>
         </ResponsiveContainer>
