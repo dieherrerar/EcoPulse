@@ -5,7 +5,7 @@ import type { NextPage } from "next";
 import KpiCard from "../../../components/KpiCard";
 import LineChartComp from "../../../components/charts/LineChartComp";
 import CO2TimeSeriesChart from "../../../components/charts/CO2TimeSeriesChart";
-import PM25TimeSeriesChart from "../../../components/charts/PM25TimeSeriesChart";
+import PM25TimeSeriesChart from "../../../components/charts/PM25TimeSeriesChart2";
 import BarChartComp from "../../../components/charts/BarChartComp";
 import PieChartComp from "../../../components/charts/PieChartComp";
 import AreaChartComp from "../../../components/charts/AreaChartComp";
@@ -296,7 +296,7 @@ const DashboardPage: NextPage = () => {
   const { kpis, composition, stacked } = data;
 
   const kpisForPdf = [
-    { id_kpi: 1, label: "MP2.5_ATE promedio hoy", value: kpis?.avgPM25 ?? "-" },
+    { id_kpi: 1, label: "MP promedio", value: kpis?.avgPM25 ?? "-" },
     { id_kpi: 2, label: "Temperatura promedio", value: kpis?.avgTemp ?? "-" },
     { id_kpi: 3, label: "CO₂ máximo", value: kpis?.maxCO2 ?? "-" },
     {
@@ -373,7 +373,7 @@ const DashboardPage: NextPage = () => {
           <div id="kpis-dashboard" className="row g-3 mb-3">
             <div className="col-6 col-md-3">
               <KpiCard
-                title="MP2.5_ATE promedio"
+                title="Material particulado promedio"
                 value={kpis?.avgPM25 ?? "-"}
                 subtitle="µg/m³"
               />
@@ -389,14 +389,14 @@ const DashboardPage: NextPage = () => {
               <KpiCard
                 title="CO2 promedio"
                 value={kpis?.avgCO2 ?? "-"}
-                subtitle="ppm"
+                inlineUnit="ppm"
               />
             </div>
             <div className="col-6 col-md-3">
               <KpiCard
                 title="Precipitación acumulada"
                 value={kpis?.aguaCaida ?? "-"}
-                subtitle="mm"
+                inlineUnit="mm"
               />
             </div>
           </div>
@@ -406,7 +406,11 @@ const DashboardPage: NextPage = () => {
             {chartVisibility.PM25WeekdayBarChart && (
               <div className="col-12 col-lg-6">
                 <div id="chart-pm25weekday" className="dashboard-chart-container">
-                  <PM25WeekdayBarChart data={data.timeseries} />
+                  <PM25WeekdayBarChart
+                    data={data.timeseries}
+                    title="MP 2.5 por día de semana (Promedio)"
+                    yLabel="MP 2.5 (µg/m³)"
+                  />
                 </div>
               </div>
             )}
@@ -441,7 +445,7 @@ const DashboardPage: NextPage = () => {
               <div className="col-12 col-lg-6">
                 <div id="chart-pie" className="dashboard-chart-container">
                   <PieChartComp
-                    title="Distribución porcentual de partículas MP"
+                    title="Distribución porcentual por tipo de material particulado"
                     data={composition}
                     nameKey="name"
                     valueKey="value"
@@ -476,6 +480,7 @@ const DashboardPage: NextPage = () => {
                     data={data.timeseries}
                     xKey={"timestamp_registro" as any}
                     yKey={"co2_mhz19" as any}
+                    title="CO2 dentro el rango seleccionado"
                     resampleMinutes={30}
                     showDots={false}
                     compactX
@@ -494,6 +499,8 @@ const DashboardPage: NextPage = () => {
                     data={data.timeseries}
                     xKey={"timestamp_registro" as any}
                     yKey={"mp2.5_ate" as any}
+                    title="MP 2.5 dentro el rango seleccionado"
+                    yLabel="MP 2.5 (µg/m³)"
                     resampleMinutes={30}
                     showDots={false}
                     compactX
@@ -512,6 +519,8 @@ const DashboardPage: NextPage = () => {
                     data={data.timeseries}
                     xKey={"timestamp_registro" as any}
                     yKey={"tem_bme280" as any}
+                    title="Temperatura dentro el rango seleccionado"
+                    yLabel="Temperatura (°C)"
                     resampleMinutes={30}
                     showDots={false}
                     compactX

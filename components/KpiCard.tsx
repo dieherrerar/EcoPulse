@@ -4,10 +4,11 @@ interface KpiCardProps {
   title: String;
   value: String | number;
   subtitle?: String;
+  inlineUnit?: String; // muestra la unidad junto al valor
 }
 
 export default function KpiCard(props: KpiCardProps) {
-  const { title, value, subtitle } = props;
+  const { title, value, subtitle, inlineUnit } = props;
   // Maneja -999/NaN/null/vacío como sin datos; si numérico válido, 2 decimales
   let displayValue: string | number = value as any;
   const rawNum = typeof value === "string" ? parseFloat(value) : (value as number);
@@ -25,11 +26,15 @@ export default function KpiCard(props: KpiCardProps) {
     displayValue = rawNum.toFixed(2);
   }
 
+  const unit = inlineUnit ?? subtitle;
+
   return (
     <div className="Kpicard p-3 h-100">
       <div className="small text-muted">{title}</div>
-      <div className="h3 fw-bold">{displayValue}</div>
-      {subtitle && <div className="small text-muted">{subtitle}</div>}
+      <div className="h3 fw-bold">
+        {displayValue}
+        {unit && !isNoData ? ` ${unit}` : ""}
+      </div>
     </div>
   );
 }

@@ -27,7 +27,7 @@ export default function PieChartComp(props: PieChartCompProps) {
     data,
     nameKey = "name",
     valueKey = "value",
-    height = 220,
+    height = 260,
   } = props;
 
   const nameKeyStr = String(nameKey);
@@ -55,6 +55,26 @@ export default function PieChartComp(props: PieChartCompProps) {
       });
   }, [data, nameKeyStr, valueKeyStr]);
 
+  const toMpShort = (raw: any): string => {
+    const s = typeof raw === "string" ? raw : String(raw ?? "");
+    const m = s.match(/mp(\d+(?:\.\d+)?)/i);
+    return m ? `Mp ${m[1]}` : s;
+  };
+
+  const CustomLegend = (props: any) => {
+    const payload = (props?.payload ?? []) as Array<any>;
+    return (
+      <div style={{ display: "flex", gap: 16, justifyContent: "center", alignItems: "center", flexWrap: "nowrap", overflowX: "auto" }}>
+        {payload.map((entry, idx) => (
+          <div key={idx} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+            <span style={{ width: 10, height: 10, backgroundColor: entry.color, display: "inline-block", borderRadius: 2 }} />
+            <span style={{ fontSize: 12, color: "#666" }}>material particulado</span>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   // Suma total para calcular % en el tooltip
   const total = useMemo(() => {
     return chartData.reduce((sum: number, d: any) => {
@@ -68,7 +88,7 @@ export default function PieChartComp(props: PieChartCompProps) {
       <div className="small text-muted">{title}</div>
       <div className="pie-card-body p-2">
         <ResponsiveContainer width="100%" height={height}>
-          <PieChart>
+          <PieChart margin={{ top: 12, right: 24, bottom: 32, left: 24 }}>
             <Pie
               data={chartData}
               dataKey={valueKeyStr}
@@ -76,7 +96,7 @@ export default function PieChartComp(props: PieChartCompProps) {
               outerRadius={70}
               label={(props: any) => {
                 const pct = typeof props?.percent === "number" ? props.percent * 100 : 0;
-                const name = props?.name ?? "";
+                const name = toMpShort(props?.name ?? "");
                 return `${name} ${pct.toFixed(1)}%`;
               }}
               labelLine={false}
@@ -92,7 +112,7 @@ export default function PieChartComp(props: PieChartCompProps) {
                 return [`${pct.toFixed(1)}%`, name];
               }}
             />
-            <Legend />
+            <Legend verticalAlign="bottom" align="center" content={<CustomLegend />} />
           </PieChart>
         </ResponsiveContainer>
       </div>

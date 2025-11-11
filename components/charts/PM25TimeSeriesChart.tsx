@@ -54,7 +54,7 @@ export default function PM25TimeSeriesChart<T extends AnyRecord = AnyRecord>(
     height = 260,
     title = "PM2.5 en el tiempo",
     xLabel = "Fecha/Hora",
-    yLabel = "PM2.5 (Âµg/mÂ³)",
+    yLabel = "PM 2.5 (µg/m³)",
     tickFormat = defaultTickFormat,
     showDots = false,
     dotSize = 2,
@@ -247,4 +247,5 @@ export default function PM25TimeSeriesChart<T extends AnyRecord = AnyRecord>(
     </div>
   );
 }
+
 

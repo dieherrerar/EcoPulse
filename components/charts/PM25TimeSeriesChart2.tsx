@@ -7,28 +7,34 @@ import {
   YAxis,
   Tooltip,
   CartesianGrid,
+  Label,
 } from "recharts";
 
 type AnyRecord = Record<string, any>;
 
-export interface TempTimeSeriesChartProps<T extends AnyRecord = AnyRecord> {
+export interface PM25TimeSeriesChartProps<T extends AnyRecord = AnyRecord> {
   data: T[];
   xKey?: keyof T; // defaults to 'timestamp_registro'
-  yKey?: keyof T; // defaults to 'tem_bme280'
+  yKey?: keyof T; // defaults to 'mp2.5_ate'
   height?: number | string;
   title?: string;
   xLabel?: string;
   yLabel?: string;
   tickFormat?: (d: Date) => string;
-  showDots?: boolean;
-  dotSize?: number;
-  resampleMinutes?: number;
-  fillGapsToZero?: boolean;
-  treatZeroAsMissing?: boolean;
+  // Opciones rápidas
+  showDots?: boolean; // false = oculta puntos
+  dotSize?: number; // tamaño de punto cuando showDots=true
+  // Re-muestreo por intervalo (minutos). 0/undefined = sin agrupar
+  resampleMinutes?: number; // p.ej. 30
+  // Cuando hay huecos de tiempo sin datos, insertar tramo a 0
+  fillGapsToZero?: boolean; // default false
+  // Tratar valores 0 como "faltantes" y conectar la línea
+  treatZeroAsMissing?: boolean; // default true
   compactX?: boolean;
 }
 
 function defaultTickFormat(d: Date): string {
+  // dd/MM hh:mm am/pm (hora local)
   const dd = String(d.getDate()).padStart(2, "0");
   const mm = String(d.getMonth() + 1).padStart(2, "0");
   const H = d.getHours();
@@ -39,17 +45,17 @@ function defaultTickFormat(d: Date): string {
   return `${dd}/${mm} ${hh}:${mi} ${suffix}`;
 }
 
-export default function TempTimeSeriesChart<T extends AnyRecord = AnyRecord>(
-  props: TempTimeSeriesChartProps<T>
+export default function PM25TimeSeriesChart<T extends AnyRecord = AnyRecord>(
+  props: PM25TimeSeriesChartProps<T>
 ) {
   const {
     data,
     xKey = "timestamp_registro" as keyof T,
-    yKey = "tem_bme280" as keyof T,
+    yKey = "mp2.5_ate" as keyof T,
     height = 260,
-    title = "Temperatura en el tiempo",
+    title = "PM2.5 en el tiempo",
     xLabel = "Fecha/Hora",
-    yLabel = "Temperatura (°C)",
+    yLabel = "MP 2.5 (µg/m³)",
     tickFormat = defaultTickFormat,
     showDots = false,
     dotSize = 2,
@@ -96,6 +102,7 @@ export default function TempTimeSeriesChart<T extends AnyRecord = AnyRecord>(
 
     if (!intervalMs) return sorted;
 
+    // Agrupar por bin de tiempo y promediar valores
     const groups = new Map<number, { sum: number; count: number }>();
     for (const item of sorted) {
       const ms = item.__xMs as number;
@@ -111,9 +118,10 @@ export default function TempTimeSeriesChart<T extends AnyRecord = AnyRecord>(
       .sort((a, b) => a[0] - b[0])
       .map(([bin, g]) => ({ __xMs: bin, [yDataKey]: g.sum / Math.max(1, g.count) }));
 
+    // Rellenar huecos largos con ceros si se pide
     if (!fillGapsToZero || resampled.length <= 1) return resampled;
 
-    const gapMs = intervalMs * 2;
+    const gapMs = intervalMs * 2; // umbral = 2 bins sin datos
     const withZeros: AnyRecord[] = [];
     for (let i = 0; i < resampled.length - 1; i++) {
       const cur = resampled[i];
@@ -142,6 +150,7 @@ export default function TempTimeSeriesChart<T extends AnyRecord = AnyRecord>(
   const xDomainInner = compactX ? undefined : ["auto", "auto"] as const;
   const xTickFormatterInner = compactX ? undefined : ((v: number) => tickFormat(new Date(v)));
 
+  // Ticks uniformes para eje X (exactamente 10 cuando sea posible)
   const xTicks = useMemo(() => {
     if (compactX) {
       const n = categoricalData.length;
@@ -154,6 +163,7 @@ export default function TempTimeSeriesChart<T extends AnyRecord = AnyRecord>(
       }
       return indices.map((i) => categoricalData[i]?.__xLabel);
     }
+    // Eje numérico: usar rango uniforme en milisegundos
     const n = processed.length;
     if (n === 0) return [] as number[];
     const minMs = processed[0].__xMs as number;
@@ -169,6 +179,7 @@ export default function TempTimeSeriesChart<T extends AnyRecord = AnyRecord>(
     return ticks;
   }, [compactX, categoricalData, processed]);
 
+  // Dominio Y con margen para evitar bordes (no anclar a 0)
   const yDomain = useMemo(() => {
     if (!processed.length) return [0, 1] as [number, number];
     const ys = processed
@@ -178,6 +189,7 @@ export default function TempTimeSeriesChart<T extends AnyRecord = AnyRecord>(
     let min = Math.min(...ys);
     let max = Math.max(...ys);
     const range = max - min;
+    // 10% de margen; si rango=0, 10% del valor o mínimo 1
     const pad = range === 0 ? Math.max(Math.abs(max) * 0.1, 1) : range * 0.1;
     return [min - pad, max + pad] as [number, number];
   }, [processed, yDataKey]);
@@ -189,7 +201,7 @@ export default function TempTimeSeriesChart<T extends AnyRecord = AnyRecord>(
         <ResponsiveContainer width="100%" height={height}>
           <LineChart
             data={compactX ? categoricalData : processed}
-            margin={{ top: 10, right: 24, bottom: 16, left: 44 }}
+            margin={{ top: 10, right: 20, bottom: 12, left: 44 }}
           >
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
@@ -210,10 +222,12 @@ export default function TempTimeSeriesChart<T extends AnyRecord = AnyRecord>(
                 const num = typeof v === 'number' ? v : parseFloat(v);
                 return Number.isFinite(num) ? Math.round(num).toString() : String(v);
               }}
-              label={{ value: yLabel, angle: -90, position: "insideLeft" }}
-            />
+            >
+              <Label value={yLabel} angle={-90} position="insideLeft" dy={16} />
+            </YAxis>
             <Tooltip
               labelFormatter={(v: any) => {
+                // Soporta tanto eje numérico (ms) como categórico (string)
                 if (typeof v === 'number') return tickFormat(new Date(v));
                 return String(v);
               }}
@@ -226,7 +240,7 @@ export default function TempTimeSeriesChart<T extends AnyRecord = AnyRecord>(
             <Line
               type="linear"
               dataKey={yDataKey}
-              stroke="#fd7e14"
+              stroke="#0d6efd"
               strokeWidth={2}
               dot={showDots ? { r: dotSize } : false}
               connectNulls
