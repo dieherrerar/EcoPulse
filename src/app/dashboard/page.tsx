@@ -405,7 +405,7 @@ const DashboardPage: NextPage = () => {
           <div className="row g-3">
             {chartVisibility.PM25WeekdayBarChart && (
               <div className="col-12 col-lg-6">
-                <div className="dashboard-chart-container">
+                <div id="chart-pm25weekday" className="dashboard-chart-container">
                   <PM25WeekdayBarChart data={data.timeseries} />
                 </div>
               </div>
@@ -471,11 +471,11 @@ const DashboardPage: NextPage = () => {
           {chartVisibility.CO2TimeSeriesChart && (
             <div className="row g-3 mt-1">
               <div className="col-12">
-                <div className="dashboard-chart-container">
+                <div id="chart-co2ts" className="dashboard-chart-container">
                   <CO2TimeSeriesChart
                     data={data.timeseries}
-                    xKey="timestamp_registro"
-                    yKey="co2_mhz19"
+                    xKey={"timestamp_registro" as any}
+                    yKey={"co2_mhz19" as any}
                     resampleMinutes={30}
                     showDots={false}
                     compactX
@@ -489,10 +489,10 @@ const DashboardPage: NextPage = () => {
           {chartVisibility.PM25TimeSeriesChart && (
             <div className="row g-3 mt-1">
               <div className="col-12">
-                <div className="dashboard-chart-container">
+                <div id="chart-pm25ts" className="dashboard-chart-container">
                   <PM25TimeSeriesChart
                     data={data.timeseries}
-                    xKey="timestamp_registro"
+                    xKey={"timestamp_registro" as any}
                     yKey={"mp2.5_ate" as any}
                     resampleMinutes={30}
                     showDots={false}
@@ -507,10 +507,10 @@ const DashboardPage: NextPage = () => {
           {chartVisibility.TempTimeSeriesChart && (
             <div className="row g-3 mt-1">
               <div className="col-12">
-                <div className="dashboard-chart-container">
+                <div id="chart-temp" className="dashboard-chart-container">
                   <TempTimeSeriesChart
                     data={data.timeseries}
-                    xKey="timestamp_registro"
+                    xKey={"timestamp_registro" as any}
                     yKey={"tem_bme280" as any}
                     resampleMinutes={30}
                     showDots={false}
@@ -525,10 +525,10 @@ const DashboardPage: NextPage = () => {
           {chartVisibility.HumidityTimeSeriesChart && (
             <div className="row g-3 mt-1">
               <div className="col-12">
-                <div className="dashboard-chart-container">
+                <div id="chart-hum" className="dashboard-chart-container">
                   <HumidityTimeSeriesChart
                     data={data.timeseries}
-                    xKey="timestamp_registro"
+                    xKey={"timestamp_registro" as any}
                     yKey={"hum_bme280" as any}
                     resampleMinutes={30}
                     showDots={false}
@@ -552,6 +552,11 @@ const DashboardPage: NextPage = () => {
                   3: "#chart-bar",
                   4: "#chart-pie",
                   5: "#chart-area",
+                  7: "#chart-co2ts",
+                  8: "#chart-pm25ts",
+                  9: "#chart-temp",
+                  10: "#chart-hum",
+                  11: "#chart-pm25weekday",
                 }}
                 kpiNodeId="#kpis-dashboard"
               />

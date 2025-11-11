@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import React, { useState } from "react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
@@ -18,12 +18,17 @@ interface Props {
   kpiNodeId: string;
 }
 
-// 🧾 Descripciones de cada gráfico
+// ðŸ§¾ Descripciones de cada grÃ¡fico
 const CAPTIONS: Record<number, string> = {
-  2: "Relación entre la concentración de CO₂ y la temperatura ambiental durante el periodo analizado.",
-  3: "Comparativa entre el promedio diario de PM y el límite recomendado por la OMS (24h).",
-  4: "Distribución porcentual de las partículas en suspensión, según su tipo y concentración relativa.",
-  5: "Tendencia temporal del CO₂ y el consumo, observando patrones de relación a lo largo del tiempo.",
+  2: "Relacion entre CO2 y temperatura.",
+  3: "Promedio diario de PM frente al limite OMS (24 h).",
+  4: "Distribucion porcentual de particulas en suspension.",
+  5: "Tendencia de CO2 y consumo en el tiempo.",
+  7: "Serie temporal de CO2 (ppm).",
+  8: "Serie temporal de MP2.5 (ug/m3).",
+  9: "Serie temporal de temperatura (C).",
+  10: "Serie temporal de humedad relativa (%).",
+  11: "Promedio diario de MP2.5 por dia de semana.",
 };
 
 const PAR_MARGIN_X = 60;
@@ -31,7 +36,7 @@ const PAR_LINE_HEIGHT = 16;
 const PAR_WIDTH = (doc: jsPDF) =>
   doc.internal.pageSize.getWidth() - PAR_MARGIN_X * 2;
 
-//FUNCION PARA PÁRRAFO JUSTIFICADO.
+//FUNCION PARA PÃRRAFO JUSTIFICADO.
 function drawJustifiedParagraph(doc: jsPDF, text: string, yStart: number) {
   const pageW = doc.internal.pageSize.getWidth();
   const textWidth = PAR_WIDTH(doc);
@@ -61,7 +66,7 @@ function drawJustifiedParagraph(doc: jsPDF, text: string, yStart: number) {
   return y;
 }
 
-//FUNCIÓN PARA TÍTULO CENTRADO.
+//FUNCIÃ“N PARA TÃTULO CENTRADO.
 function drawSectionTitle(doc: jsPDF, title: string, y: number) {
   const pageW = doc.internal.pageSize.getWidth();
   doc.setFont("helvetica", "bold");
@@ -81,14 +86,12 @@ export default function DownloadPDF({
   const [busy, setBusy] = useState(false);
 
   const addFooter = (doc: jsPDF, pageNum: number) => {
-    const w = doc.internal.pageSize.getWidth();
-    const h = doc.internal.pageSize.getHeight();
-    doc.setFontSize(9);
-    doc.text(`EcoPulse • ${new Date().toLocaleString("es-CL")}`, 20, h - 16, {
-      align: "left",
-    });
-    doc.text(`Página ${pageNum}`, w - 40, h - 16, { align: "right" });
-  };
+  const w = doc.internal.pageSize.getWidth();
+  const h = doc.internal.pageSize.getHeight();
+  doc.setFontSize(9);
+  doc.text(`EcoPulse - ${new Date().toLocaleString("es-CL")}`, 20, h - 16, { align: "left" });
+  doc.text(`Pagina ${pageNum}`, w - 40, h - 16, { align: "right" });
+};
 
   //Portada
   const addCover = (doc: jsPDF) => {
@@ -107,7 +110,7 @@ export default function DownloadPDF({
     doc.setFontSize(20);
     doc.text("EcoPulse", pageW / 2, 230, { align: "center" });
 
-    // Línea decorativa
+    // LÃ­nea decorativa
     doc.setDrawColor(25, 90, 140);
     doc.setLineWidth(1.2);
     doc.line(pageW / 2 - 60, 245, pageW / 2 + 60, 245);
@@ -124,7 +127,7 @@ export default function DownloadPDF({
 
     doc.setFontSize(11);
     doc.text(
-      "Sistema de monitoreo ambiental y analítica inteligente.",
+      "Sistema de monitoreo ambiental y analitica inteligente.",
       pageW / 2,
       300,
       { align: "center" }
@@ -139,14 +142,12 @@ export default function DownloadPDF({
 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(18);
-    doc.text("Introducción", pageW / 2, 60, { align: "center" });
+    doc.text("Introduccion", pageW / 2, 60, { align: "center" });
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(12);
 
-    const intro =
-      "El presente informe tiene como objetivo proporcionar una visión general del estado ambiental monitoreado por la plataforma EcoPulse. En las siguientes secciones se presentan los principales indicadores y tendencias obtenidas a partir de los sensores desplegados, así como su análisis comparativo respecto a los valores de referencia establecidos.\n\nEste reporte se genera de forma automática y recoge tanto las métricas clave (KPIs) como los gráficos que permiten visualizar la evolución de las variables ambientales de interés. La información busca facilitar la interpretación de los datos, apoyar la toma de decisiones y contribuir a la gestión sustentable del entorno monitoreado.";
-
+    const intro = "Este informe resume el estado ambiental monitoreado por la plataforma EcoPulse. Se presentan indicadores clave y tendencias obtenidas a partir de los sensores, junto con su comparacion respecto a valores de referencia.\n\nEl reporte se genera automaticamente e incluye KPIs y graficos que permiten visualizar la evolucion de las variables ambientales de interes. La informacion busca facilitar la interpretacion de los datos y apoyar la toma de decisiones.";
     // Justificar manualmente el texto (como en Word)
     const marginX = 60;
     const lineHeight = 16;
@@ -155,7 +156,7 @@ export default function DownloadPDF({
 
     let y = 100;
     lines.forEach((txt: any, idx: any) => {
-      doc.text("", PAR_MARGIN_X - 10, y);
+      doc.text("-", PAR_MARGIN_X - 10, y);
       y = drawJustifiedParagraph(doc, txt, y);
       y += 6;
     });
@@ -193,34 +194,34 @@ export default function DownloadPDF({
       const ref = 130;
       const pos = Number(pm25) <= ref ? "por debajo" : "por encima";
       items.push(
-        `MP2.5 promedio del día (µg/m³): indicador de material particulado fino (≤ 2,5 µm). ` +
-          `Al momento de la generación del informe, el promedio fue ${pm25} µg/m³, ` +
-          `ubicándose ${pos} del umbral OMS (${ref} µg/m³).`
+        `MP2.5 promedio del dia (ug/m3): indicador de material particulado fino (<= 2.5 um). Al momento de la generacion del informe, el promedio fue ${pm25} ug/m3, ubicandose ${pos} del umbral OMS (${ref} ug/m3). ` +
+          `Al momento de la generaciÃ³n del informe, el promedio fue ${pm25} Âµg/mÂ³, ` +
+          `ubicÃ¡ndose ${pos} del umbral OMS (${ref} Âµg/mÂ³).`
       );
     }
     if (temp !== undefined) {
       items.push(
-        `Temperatura promedio (°C): describe las condiciones térmicas predominantes del periodo. ` +
-          `El valor observado es ${temp} °C.`
+        `Temperatura promedio (C): describe las condiciones termicas predominantes del periodo. El valor observado es ${temp} C. ` +
+          `El valor observado es ${temp} Â°C.`
       );
     }
     if (co2 !== undefined) {
       items.push(
-        `CO₂ máximo (ppm): mayor concentración puntual registrada por los sensores durante el intervalo. ` +
-          `El valor alcanzó ${co2} ppm.`
+        `CO2 maximo (ppm): mayor concentracion puntual registrada por los sensores durante el intervalo. El valor alcanzo ${co2} ppm. ` +
+          `El valor alcanzÃ³ ${co2} ppm.`
       );
     }
     if (rain !== undefined) {
       items.push(
-        `Precipitación acumulada (mm): total de agua caída en el periodo de análisis. ` +
-          `Se registró ${rain} mm.`
+        `Precipitacion acumulada (mm): total de agua caida en el periodo de analisis. Se registro ${rain} mm. ` +
+          `Se registrÃ³ ${rain} mm.`
       );
     }
     if (items.length === 0) {
       kpis.forEach((k) => items.push(`${k.label}: ${k.value}.`));
     }
 
-    // Estimar altura total del texto para reservar espacio antes de calcular el tamaño de la imagen
+    // Estimar altura total del texto para reservar espacio antes de calcular el tamaÃ±o de la imagen
     const textWidth = PAR_WIDTH(doc);
     const bulletGap = 6;
     let estimatedTextHeight = 0;
@@ -230,23 +231,23 @@ export default function DownloadPDF({
       estimatedTextHeight += linesCount * PAR_LINE_HEIGHT + bulletGap;
     });
     if (estimatedTextHeight > 0) {
-      estimatedTextHeight -= bulletGap; // quitar el gap del último bullet
+      estimatedTextHeight -= bulletGap; // quitar el gap del Ãºltimo bullet
     }
 
-    // 2) Pintamos la página: título → imagen (arriba) → texto (debajo)
+    // 2) Pintamos la pÃ¡gina: tÃ­tulo â†’ imagen (arriba) â†’ texto (debajo)
     doc.addPage();
     drawSectionTitle(doc, "KPIs del Dashboard", 50);
 
     const titleGap = 20;
-    const imgTop = 50 + titleGap; // debajo del título
+    const imgTop = 50 + titleGap; // debajo del tÃ­tulo
     const textTopGap = 18; // espacio entre imagen y texto
 
-    // Calcular tamaño máximo permitido para la imagen para que quepa también el texto y el footer
+    // Calcular tamaÃ±o mÃ¡ximo permitido para la imagen para que quepa tambiÃ©n el texto y el footer
     const maxW = pageW - 80;
     const maxH =
       pageH - imgTop - textTopGap - estimatedTextHeight - footerSpace;
 
-    // Si el texto es muy largo, maxH podría ser pequeño; aseguramos un mínimo visual
+    // Si el texto es muy largo, maxH podrÃ­a ser pequeÃ±o; aseguramos un mÃ­nimo visual
     const safeMaxH = Math.max(120, maxH);
 
     const ratio = Math.min(maxW / canvas.width, safeMaxH / canvas.height);
@@ -262,7 +263,7 @@ export default function DownloadPDF({
     let y = imgY + drawH + textTopGap;
     items.forEach((txt) => {
       // bullet
-      doc.text("•", PAR_MARGIN_X - 10, y);
+      doc.text("-", PAR_MARGIN_X - 10, y);
       y = drawJustifiedParagraph(doc, txt, y);
       y += bulletGap;
     });
@@ -313,7 +314,7 @@ export default function DownloadPDF({
       if (y > yEndLimit) {
         const remaining = caption;
         doc.addPage();
-        drawSectionTitle(doc, "Continuación", 40);
+        drawSectionTitle(doc, "ContinuaciÃ³n", 40);
         doc.setFont("helvetica", "normal");
         doc.setFontSize(12);
         y = drawJustifiedParagraph(doc, remaining, 70);
@@ -334,13 +335,13 @@ export default function DownloadPDF({
 
       let pageNum = 2;
 
-      // Introducción
+      // Introduccion
       addIntroduccion(doc, pageNum++);
 
       // KPIs
       await addKpis(doc, kpiNodeId, kpis, pageNum++);
 
-      // Gráficos activos
+      // GrÃ¡ficos activos
       const activos = graficos
         .filter((g) => Number(g.activo) === 1)
         .sort((a, b) => Number(a.id_grafico) - Number(b.id_grafico));
