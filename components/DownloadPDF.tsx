@@ -20,15 +20,15 @@ interface Props {
 
 // ðŸ§¾ Descripciones de cada grÃ¡fico
 const CAPTIONS: Record<number, string> = {
-  2: "Relacion entre CO2 y temperatura.",
-  3: "Promedio diario de PM frente al limite OMS (24 h).",
-  4: "Distribucion porcentual de particulas en suspension.",
-  5: "Tendencia de CO2 y consumo en el tiempo.",
-  7: "Serie temporal de CO2 (ppm).",
-  8: "Serie temporal de MP2.5 (ug/m3).",
-  9: "Serie temporal de temperatura (C).",
-  10: "Serie temporal de humedad relativa (%).",
-  11: "Promedio diario de MP2.5 por dia de semana.",
+  2: "Este gráfico compara las variaciones simultáneas de dióxido de carbono (CO₂) y temperatura ambiental, permitiendo analizar su correlación temporal. Un incremento conjunto puede indicar espacios cerrados con poca ventilación o mayor actividad metabólica y de ocupación. La divergencia entre ambas curvas evidencia posibles efectos meteorológicos o cambios en la densidad del aire que afectan la dispersión de gases.",
+  3: "Representa la concentración promedio diaria de material particulado (PM2.5) y la compara con el valor límite recomendado por la Organización Mundial de la Salud (OMS). Este gráfico permite evaluar el cumplimiento normativo y detectar episodios de contaminación puntual. Valores consistentemente por debajo del límite reflejan una atmósfera saludable, mientras que los sobrepasos reiterados advierten necesidad de medidas correctivas.",
+  4: "Este gráfico representa la proporción relativa de material particulado suspendido en el aire según su tamaño o tipo. Permite identificar cuál fracción de partículas (por ejemplo, PM1, PM2.5 o PM10) contribuye en mayor medida a la carga total de contaminación atmosférica. Un predominio de PM2.5 sugiere una presencia significativa de partículas finas, las más perjudiciales para la salud respiratoria.",
+  5: "Este gráfico analiza la relación entre la concentración de CO₂ y el consumo energético o de recursos durante el periodo monitoreado. Un aumento paralelo puede evidenciar mayor ocupación, uso intensivo de equipos o ventilación insuficiente. La correlación entre ambos indicadores es clave para optimizar eficiencia energética y calidad del aire interior.",
+  7: "La serie temporal muestra la evolución de las concentraciones de dióxido de carbono (CO₂) durante el periodo seleccionado. Esta visualización permite detectar picos de emisión asociados a actividad humana o a condiciones de ventilación limitadas. Tendencias ascendentes sostenidas podrían indicar una acumulación de gases en zonas de baja circulación de aire.",
+  8: "Este gráfico refleja la variación horaria o diaria del material particulado fino (PM2.5). Permite observar patrones recurrentes, como incrementos durante horas punta o en condiciones meteorológicas adversas. La estabilidad en valores bajos sugiere un ambiente limpio y controlado, mientras que los picos abruptos advierten episodios de contaminación puntual.",
+  9: "La gráfica muestra la dinámica térmica del entorno monitoreado, destacando las fluctuaciones diarias de temperatura. Las variaciones permiten correlacionar los cambios térmicos con los niveles de contaminación o con la ocurrencia de precipitaciones. Temperaturas estables indican condiciones atmosféricas homogéneas, mientras que amplitudes térmicas amplias reflejan influencia meteorológica significativa.",
+  10: "Indica la variación de la humedad del aire a lo largo del tiempo. Este parámetro influye directamente en la formación y comportamiento de las partículas suspendidas y en la sensación térmica. Niveles altos pueden favorecer la condensación y el aumento temporal de PM, mientras que valores bajos reflejan aire seco y mayor dispersión.",
+  11: "Este gráfico compara los valores medios de PM2.5 para cada día de la semana, evidenciando patrones de contaminación asociados a la actividad humana. Días laborales suelen mostrar concentraciones más altas debido al tránsito y actividad industrial, mientras que fines de semana tienden a valores más bajos. La comparación facilita la planificación de estrategias de mitigación según el comportamiento semanal.",
 };
 
 const PAR_MARGIN_X = 60;
@@ -86,12 +86,14 @@ export default function DownloadPDF({
   const [busy, setBusy] = useState(false);
 
   const addFooter = (doc: jsPDF, pageNum: number) => {
-  const w = doc.internal.pageSize.getWidth();
-  const h = doc.internal.pageSize.getHeight();
-  doc.setFontSize(9);
-  doc.text(`EcoPulse - ${new Date().toLocaleString("es-CL")}`, 20, h - 16, { align: "left" });
-  doc.text(`Pagina ${pageNum}`, w - 40, h - 16, { align: "right" });
-};
+    const w = doc.internal.pageSize.getWidth();
+    const h = doc.internal.pageSize.getHeight();
+    doc.setFontSize(9);
+    doc.text(`EcoPulse - ${new Date().toLocaleString("es-CL")}`, 20, h - 16, {
+      align: "left",
+    });
+    doc.text(`Pagina ${pageNum}`, w - 40, h - 16, { align: "right" });
+  };
 
   //Portada
   const addCover = (doc: jsPDF) => {
@@ -147,7 +149,8 @@ export default function DownloadPDF({
     doc.setFont("helvetica", "normal");
     doc.setFontSize(12);
 
-    const intro = "Este informe resume el estado ambiental monitoreado por la plataforma EcoPulse. Se presentan indicadores clave y tendencias obtenidas a partir de los sensores, junto con su comparacion respecto a valores de referencia.\n\nEl reporte se genera automaticamente e incluye KPIs y graficos que permiten visualizar la evolucion de las variables ambientales de interes. La informacion busca facilitar la interpretacion de los datos y apoyar la toma de decisiones.";
+    const intro =
+      "Este informe resume el estado ambiental monitoreado por la plataforma EcoPulse. Se presentan indicadores clave y tendencias obtenidas a partir de los sensores, junto con su comparacion respecto a valores de referencia.\n\nEl reporte se genera automaticamente e incluye KPIs y graficos que permiten visualizar la evolucion de las variables ambientales de interes. La informacion busca facilitar la interpretacion de los datos y apoyar la toma de decisiones.";
     // Justificar manualmente el texto (como en Word)
     const marginX = 60;
     const lineHeight = 16;
@@ -194,27 +197,26 @@ export default function DownloadPDF({
       const ref = 130;
       const pos = Number(pm25) <= ref ? "por debajo" : "por encima";
       items.push(
-        `MP2.5 promedio del dia (ug/m3): indicador de material particulado fino (<= 2.5 um). Al momento de la generacion del informe, el promedio fue ${pm25} ug/m3, ubicandose ${pos} del umbral OMS (${ref} ug/m3). ` +
-          `Al momento de la generaciÃ³n del informe, el promedio fue ${pm25} Âµg/mÂ³, ` +
-          `ubicÃ¡ndose ${pos} del umbral OMS (${ref} Âµg/mÂ³).`
+        `MP2.5 promedio(día o rango seleccionado) (ug/m3): indicador de material particulado fino (<= 2.5 um). Al momento de la generacion del informe, el promedio fue ${pm25} ug/m3, ubicandose ${pos} del umbral OMS (${ref} ug/m3). ` +
+          `Al momento de la generacion del informe, el promedio fue ${pm25}ug/m3, ` +
+          `ubicandose ${pos} del umbral OMS (${ref}ug/m3).`
       );
     }
     if (temp !== undefined) {
       items.push(
-        `Temperatura promedio (C): describe las condiciones termicas predominantes del periodo. El valor observado es ${temp} C. ` +
-          `El valor observado es ${temp} Â°C.`
+        `Temperatura promedio (C) (dia o rango seleccionado): describe las condiciones termicas predominantes del periodo. El valor observado es ${temp} C. ` +
+          `El valor observado es ${temp}°C.`
       );
     }
     if (co2 !== undefined) {
       items.push(
-        `CO2 maximo (ppm): mayor concentracion puntual registrada por los sensores durante el intervalo. El valor alcanzo ${co2} ppm. ` +
-          `El valor alcanzÃ³ ${co2} ppm.`
+        `CO2 promedio(ppm) (dia o rango seleccionado): mayor concentracion puntual registrada por los sensores durante el intervalo. El valor alcanzo ${co2} ppm. `
       );
     }
     if (rain !== undefined) {
       items.push(
-        `Precipitacion acumulada (mm): total de agua caida en el periodo de analisis. Se registro ${rain} mm. ` +
-          `Se registrÃ³ ${rain} mm.`
+        `Precipitacion acumulada(mm) (dia o rango seleccionado): total de agua caida en el periodo de analisis. Se registro ${rain} mm. ` +
+          `Se registro ${rain} mm.`
       );
     }
     if (items.length === 0) {
