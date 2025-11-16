@@ -8,24 +8,32 @@ import { checkAuth } from "../lib/checkAuth";
 export default async function HomePage() {
   const { valid, user } = await checkAuth();
 
+  const cities = [
+    { name: "Viña del Mar", endpoint: "/api/temperatura/vina" },
+    { name: "Valparaíso", endpoint: "/api/temperatura/valparaiso" },
+    { name: "Concón", endpoint: "/api/temperatura/concon" },
+    { name: "Quilpué", endpoint: "/api/temperatura/quilpue" },
+    { name: "Limache", endpoint: "/api/temperatura/limache" },
+  ];
+
   return (
     <div
       className="home-container"
       style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}
     >
       {valid ? (
-        <p className="welcome-admin">👋 Bienvenido, {user?.name}</p>
+        <p className="welcome-admin">Bienvenido, {user?.name}</p>
       ) : (
         <p></p>
       )}
 
       <Carousel />
-      <h1 className="PreguntaInicio">¿Qué encontrarás acá?</h1>
+      <h1 className="PreguntaInicio">¿Qué encontrarás aquí?</h1>
       <div className="cards-container">
         <Card
           title={"Detección de Patrones"}
           description={
-            "A través de un mdelo de clustering previamente entrenado, se detectan tendencias y patrones con los valores recolectados."
+            "A través de un modelo de clustering previamente entrenado, se detectan tendencias y patrones con los valores recolectados."
           }
         />
         <Card
@@ -41,24 +49,23 @@ export default async function HomePage() {
           }
         />
         <Card
-          title={"Análizis de Alertas"}
+          title={"Análisis de Alertas"}
           description={
             "Consulta y analiza las alertas medioambientales emitidas en función de los datos recolectados en una fecha determinada."
           }
         />
       </div>
-      <h2 className="temperature-title">Temperaturas Actuales</h2>
+      <h2 className="temperature-title">
+        Temperatura en Viña y ciudades cercanas de la Quinta Región
+      </h2>
       <div className="temperature-cards">
-        <div className="kpi-card-wrapper">
-          <TemperatureCard city="Viña del Mar" />
-        </div>
-        <div className="kpi-card-wrapper">
-          <TemperatureCard city="Valparaíso" />
-        </div>
-        <div className="kpi-card-wrapper">
-          <TemperatureCard city="Punta Arenas" />
-        </div>
+        {cities.map((c) => (
+          <div className="kpi-card-wrapper" key={c.name}>
+            <TemperatureCard city={c.name} endpoint={c.endpoint} />
+          </div>
+        ))}
       </div>
     </div>
   );
 }
+

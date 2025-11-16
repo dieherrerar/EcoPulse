@@ -4,9 +4,9 @@ import React from "react";
 
 interface TableProps {
   datos: {
-    variable: String;
-    descripcion: String;
-    rango: String;
+    variable: string;
+    descripcion: string;
+    rango_observado: string;
   }[];
 }
 
@@ -27,7 +27,7 @@ export default function Table(props: TableProps) {
             <tr key={index}>
               <td>{row.variable}</td>
               <td>{row.descripcion}</td>
-              <td>{row.rango}</td>
+              <td>{row.rango_observado}</td>
             </tr>
           ))}
         </tbody>

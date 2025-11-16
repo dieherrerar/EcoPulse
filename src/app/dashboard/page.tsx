@@ -51,7 +51,7 @@ const DashboardPage: NextPage = () => {
   const [appliedEndDate, setAppliedEndDate] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [datosDiccionario, setDatosDiccionario] = useState<
-    { variable: string; descripcion: string; rango: string }[]
+    { variable: string; descripcion: string; rango_observado: string }[]
   >([]);
   const [isAdmin, setIsAdmin] = useState(false);
   const [graficos, setGraficos] = useState<GraficoItem[]>([]);
@@ -268,7 +268,7 @@ const DashboardPage: NextPage = () => {
   //Diccionario de datos
   useEffect(() => {
     (async () => {
-      const resp = await fetch("api/diccionario-datos");
+      const resp = await fetch("/api/diccionario-datos", { cache: "no-store" });
       const jsronres = await resp.json();
       if (jsronres.success) {
         setDatosDiccionario(jsronres.datos);

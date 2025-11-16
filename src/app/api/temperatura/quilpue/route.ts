@@ -3,8 +3,8 @@ import { NextResponse } from "next/server";
 export async function GET() {
   try {
     const baseUrl = "https://www.meteosource.com/api/v1/free/point";
-    const lat = -33.02457;
-    const lon = -71.55183;
+    const lat = -33.0498135;
+    const lon = -71.4415282;
     const apiKey = process.env.APIKEY;
 
     if (!apiKey) {
@@ -37,3 +37,4 @@ export async function GET() {
     );
   }
 }
+

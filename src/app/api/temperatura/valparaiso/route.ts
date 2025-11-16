@@ -25,8 +25,10 @@ export async function GET() {
     const data = await res.json();
 
     const temperatura = data?.current?.temperature;
+    const summary = data?.current?.summary ?? null;
+    const icon = data?.current?.icon ?? null;
 
-    return NextResponse.json({ temperatura, lat, lon });
+    return NextResponse.json({ temperatura, summary, icon, lat, lon });
   } catch (error: any) {
     console.error("Error Meteosource: ", error.messagge);
     return NextResponse.json(
