@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import DownloadPDF from "../../../components/DownloadPDF";
+import DownloadClusterPDF from "../../../components/DownloadClusterPDF";
 import Cluster3D from "../../../components/charts/Cluster3D";
 import FullPageLoader from "../../../components/FullPageLoader";
 // Alertas eliminadas en esta vista; se muestran en el dashboard
@@ -205,10 +205,10 @@ export default function ClusterrPage() {
         <div id="ButtonPDF" className="mb-4">
           <div className="container">
             <div className="d-flex gap-3 flex-wrap">
-              <DownloadPDF
-                targetId="container py-4"
-                fileName={"eco_clustering_" + appliedStartDate + "_a_" + appliedEndDate}
-                hideSelectors={["#fecha", "#ButtonPDF"]}
+              <DownloadClusterPDF
+                targetSelector="#cluster-root"
+                fileName={`eco_clustering_${appliedStartDate}_a_${appliedEndDate}.pdf`}
+                hideSelectors={["#ButtonPDF"]}
                 btnClassName="dashboard-btn-blue"
               />
             </div>
