@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useEffect, useState } from "react";
 
@@ -39,8 +39,8 @@ function WeatherIcon({ category }: { category: WeatherCategory }) {
   if (category === "partly") {
     return (
       <svg
-        width="40"
-        height="40"
+        width="44"
+        height="44"
         viewBox="0 0 32 32"
         aria-hidden="true"
         role="img"
@@ -57,8 +57,8 @@ function WeatherIcon({ category }: { category: WeatherCategory }) {
   if (category === "fog") {
     return (
       <svg
-        width="40"
-        height="40"
+        width="44"
+        height="44"
         viewBox="0 0 32 32"
         aria-hidden="true"
         role="img"
@@ -76,8 +76,8 @@ function WeatherIcon({ category }: { category: WeatherCategory }) {
   if (category === "drizzle") {
     return (
       <svg
-        width="40"
-        height="40"
+        width="44"
+        height="44"
         viewBox="0 0 32 32"
         aria-hidden="true"
         role="img"
@@ -99,8 +99,8 @@ function WeatherIcon({ category }: { category: WeatherCategory }) {
   if (category === "rain") {
     return (
       <svg
-        width="40"
-        height="40"
+        width="44"
+        height="44"
         viewBox="0 0 32 32"
         aria-hidden="true"
         role="img"
@@ -122,8 +122,8 @@ function WeatherIcon({ category }: { category: WeatherCategory }) {
   if (category === "storm") {
     return (
       <svg
-        width="40"
-        height="40"
+        width="44"
+        height="44"
         viewBox="0 0 32 32"
         aria-hidden="true"
         role="img"
@@ -140,8 +140,8 @@ function WeatherIcon({ category }: { category: WeatherCategory }) {
   if (category === "wind") {
     return (
       <svg
-        width="40"
-        height="40"
+        width="44"
+        height="44"
         viewBox="0 0 32 32"
         aria-hidden="true"
         role="img"
@@ -167,8 +167,8 @@ function WeatherIcon({ category }: { category: WeatherCategory }) {
   if (category === "snow") {
     return (
       <svg
-        width="40"
-        height="40"
+        width="44"
+        height="44"
         viewBox="0 0 32 32"
         aria-hidden="true"
         role="img"
@@ -187,8 +187,8 @@ function WeatherIcon({ category }: { category: WeatherCategory }) {
   if (category === "sunny") {
     return (
       <svg
-        width="40"
-        height="40"
+        width="44"
+        height="44"
         viewBox="0 0 32 32"
         aria-hidden="true"
         role="img"
@@ -273,8 +273,8 @@ function WeatherIcon({ category }: { category: WeatherCategory }) {
   if (category === "cloudy") {
     return (
       <svg
-        width="40"
-        height="40"
+        width="44"
+        height="44"
         viewBox="0 0 32 32"
         aria-hidden="true"
         role="img"
@@ -289,8 +289,8 @@ function WeatherIcon({ category }: { category: WeatherCategory }) {
 
   return (
     <svg
-      width="40"
-      height="40"
+      width="44"
+      height="44"
       viewBox="0 0 32 32"
       aria-hidden="true"
       role="img"
@@ -357,7 +357,7 @@ export default function TemperatureCard({ city, endpoint }: TemperatureCardProps
       ? "Cargando..."
       : temp === null || Number.isNaN(temp)
       ? "N/A"
-      : `${temp.toFixed(1)} °C`;
+      : `${temp.toFixed(1)} Â°C`;
 
   const conditionLabel =
     category === "sunny"
@@ -378,19 +378,27 @@ export default function TemperatureCard({ city, endpoint }: TemperatureCardProps
       ? "Vientos fuertes"
       : category === "snow"
       ? "Nieve"
-      : "Condición actual";
+      : "CondiciÃ³n actual";
 
   return (
     <div className="Kpicard p-3 h-100 d-flex flex-column justify-content-between">
       <div>
         <div className="temperature-city-name">{city}</div>
-        <div className="h3 fw-bold mb-0">{displayTemp}</div>
+        <div className="temperature-main-row mt-1">
+          <div className="h3 fw-bold mb-0 temperature-value">{displayTemp}</div>
+          {!loading && (
+            <div className="temperature-icon-inline">
+              <WeatherIcon category={category} />
+            </div>
+          )}
+        </div>
       </div>
-      <div className="d-flex align-items-center gap-2 mt-3">
-        <WeatherIcon category={category} />
-        <span className="small text-muted">{conditionLabel}</span>
+      <div className="mt-2">
+        <span className="temperature-condition-label">{conditionLabel}</span>
       </div>
     </div>
   );
 }
+
+
 

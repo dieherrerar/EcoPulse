@@ -157,6 +157,19 @@
   transition: color 0.2s cubic-bezier(0.4, 2, 0.6, 1);
 }
 
+.card .card-title {
+  font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+}
+
+.card .card-text {
+  font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-size: 0.98rem;
+  line-height: 1.5;
+}
+
 .card:hover .card-title,
 .card:hover .card-text {
   color: #2ecc71;
@@ -167,6 +180,7 @@
   box-shadow: 0 8px 32px rgba(30, 80, 60, 0.18);
   border-color: #2ecc71;
 }
+
 #carouselExampleCaptions {
   margin: 30px auto 0 auto;
 }
@@ -187,32 +201,57 @@
   cursor: pointer;
 }
 
-.card-body {
+.cards-container {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  align-items: stretch;
+  gap: 24px;
+  width: 100%;
+  max-width: 1400px;
+  margin: 70px auto 0;
+  padding: 0 40px;
+}
+
+.cards-container .card {
+  flex: 1 1 0;
+  max-width: 25%;
+  min-width: 0;
+}
+
+.home-feature-card {
+  height: 100%;
+  min-height: 230px;
+}
+
+.home-feature-card .card-body {
   background: transparent;
 }
 
-.cards-container {
+.home-feature-icon {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   justify-content: center;
-  gap: 100px;
   width: 100%;
-  margin: 0 auto;
-  max-width: 1200px;
-  padding: 0 30px;
-  margin-top: 70px;
+  margin-top: 1rem;
 }
 
-@media (max-width: 900px) {
-  .card {
-    flex-basis: 45%;
+@media (max-width: 992px) {
+  .cards-container {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .cards-container .card {
+    flex: 0 1 45%;
     max-width: 48%;
+    margin-bottom: 24px;
   }
 }
 
 @media (max-width: 600px) {
-  .card {
-    flex-basis: 100%;
+  .cards-container .card {
+    flex: 0 1 100%;
     max-width: 100%;
   }
 }

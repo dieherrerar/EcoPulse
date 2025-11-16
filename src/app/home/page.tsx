@@ -31,28 +31,20 @@ export default async function HomePage() {
       <h1 className="PreguntaInicio">¿Qué encontrarás aquí?</h1>
       <div className="cards-container">
         <Card
-          title={"Detección de Patrones"}
-          description={
-            "A través de un modelo de clustering previamente entrenado, se detectan tendencias y patrones con los valores recolectados."
-          }
+          title="Detección de patrones"
+          description="Identifica tendencias y agrupaciones relevantes mediante modelos de clustering entrenados con los datos recolectados."
         />
         <Card
-          title={"Generación de Reportes"}
-          description={
-            "Podrás generar reportes en formato PDF del dashboard y en formato CSV de los datos recolectados en un día específico."
-          }
+          title="Generación de reportes"
+          description="Crea reportes ejecutivos en PDF del dashboard y exporta datos históricos en formato CSV para análisis detallado."
         />
         <Card
-          title={"Visualización de Dashboard"}
-          description={
-            "Un dashboard interactivo te permitirá visualizar los datos en tiempo real y analizar las tendencias medioambientales."
-          }
+          title="Visualización de dashboard"
+          description="Explora un dashboard interactivo que actualiza cada 10 minutos el estado ambiental y sus principales indicadores."
         />
         <Card
-          title={"Análisis de Alertas"}
-          description={
-            "Consulta y analiza las alertas medioambientales emitidas en función de los datos recolectados en una fecha determinada."
-          }
+          title="Análisis de alertas"
+          description="Revisa y analiza alertas medioambientales generadas en función de umbrales definidos y fechas específicas."
         />
       </div>
       <h2 className="temperature-title">

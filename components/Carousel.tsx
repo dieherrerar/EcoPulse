@@ -15,7 +15,7 @@ export default function Carousel() {
       id="carouselExampleCaptions"
       className="carousel slide"
       data-bs-ride="carousel"
-      data-bs-interval="5000"
+      data-bs-interval="4000"
     >
       <div className="carousel-indicators">
         <button

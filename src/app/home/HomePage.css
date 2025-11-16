@@ -74,14 +74,17 @@
 .Kpicard {
   background: rgba(255, 255, 255, 0.95);
   border-radius: 10px;
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.16);
-  transition: transform 0.3s ease;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+  transition: transform 0.25s ease, box-shadow 0.25s ease,
+    border-color 0.25s ease;
   border: 1px solid rgba(30, 80, 60, 0.18);
   padding: 0.9rem 1.1rem;
 }
 
 .Kpicard:hover {
   transform: translateY(-4px);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.22);
+  border-color: #2ecc71;
 }
 
 .Kpicard .h3 {
@@ -96,4 +99,30 @@
   color: #184d2b;
   margin-bottom: 6px;
   letter-spacing: 0.02em;
+}
+
+.temperature-icon-inline svg {
+  width: 44px;
+  height: 44px;
+}
+
+.temperature-main-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.9rem;
+}
+
+.temperature-condition-label {
+  font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #184d2b;
+}
+
+.temperature-icon-inline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0.75rem;
 }
