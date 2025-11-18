@@ -44,7 +44,7 @@ jobs:
           docker push $IMAGE:${{ github.sha }}
           docker push $IMAGE:latest
 
-º      - name: Create env file for Cloud Run
+      - name: Create env file for Cloud Run
         run: |
           rm -f .env.deploy
           {
