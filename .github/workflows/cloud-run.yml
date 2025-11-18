@@ -1,4 +1,4 @@
-name: nextjs-cloudrun-app
+name: EcoPulse
 
 on:
   push:
