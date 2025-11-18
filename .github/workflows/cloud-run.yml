@@ -1,0 +1,75 @@
+name: nextjs-cloudrun-app
+
+on:
+  push:
+    branches: ["main"]
+
+env:
+  PROJECT_ID: ${{ secrets.CLOUD_RUN_PROJECT_ID }}
+  REGION: us-east1
+  SERVICE: nextjs-cloudrun-app
+  IMAGE: gcr.io/${{ secrets.CLOUD_RUN_PROJECT_ID }}/nextjs-cloudrun-app
+
+jobs:
+  build-and-deploy:
+    name: Setup, Build, and Deploy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Auth to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.CLOUD_RUN_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+
+      - name: Configure Docker auth for GCR
+        run: gcloud auth configure-docker gcr.io -q
+
+      - name: Build and tag Docker image
+        run: |
+          docker build . -t $IMAGE:${{ github.sha }} -t $IMAGE:latest
+
+      - name: Push image to GCR
+        run: |
+          docker push $IMAGE:${{ github.sha }}
+          docker push $IMAGE:latest
+
+º      - name: Create env file for Cloud Run
+        run: |
+          rm -f .env.deploy
+          {
+            echo "NODE_ENV: production"
+            echo "NEXT_TELEMETRY_DISABLED: \"1\""
+            echo "DB_USER: \"${{ secrets.DB_USER }}\""
+            echo "DB_PASSWORD: \"${{ secrets.DB_PASSWORD }}\""
+            echo "DB_HOST: \"${{ secrets.DB_HOST }}\""
+            echo "DB_PORT: \"${{ secrets.DB_PORT }}\""
+            echo "DB_NAME: \"${{ secrets.DB_NAME }}\""
+            echo "JWT_SECRET: \"${{ secrets.JWT_SECRET }}\""
+            echo "APIKEY: \"${{ secrets.APIKEY }}\""
+          } >> .env.deploy
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy ${{ env.SERVICE }} \
+            --image $IMAGE:${{ github.sha }} \
+            --region ${{ env.REGION }} \
+            --platform managed \
+            --allow-unauthenticated \
+            --port 8080 \
+            --timeout 3600 \
+            --concurrency 100 \
+            --min-instances 0 \
+            --max-instances 10 \
+            --env-vars-file .env.deploy \
+            --quiet
