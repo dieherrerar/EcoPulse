@@ -196,7 +196,15 @@ export async function GET(req: NextRequest) {
       consumo: round2(totalConsumo / timeseries.length),
     }));
 
+    // Obtener título del dashboard (primer registro por ahora)
+    const dashboardInfo = await query(
+      "SELECT titulo_dashboard FROM dashboard ORDER BY id_dashboard ASC LIMIT 1"
+    );
+    const tituloDashboard: string =
+      dashboardInfo.rows?.[0]?.titulo_dashboard || "Dashboard Ambiental";
+
     const payload: DashboardPayload = {
+      titulo_dashboard: tituloDashboard,
       kpis,
       timeseries,
       composition,

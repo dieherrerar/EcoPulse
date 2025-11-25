@@ -9,6 +9,8 @@ interface DownloadClusterPDFProps {
   fileName?: string;
   hideSelectors?: string[];
   btnClassName?: string;
+  reportTypeId?: number;
+  dashboardId?: number;
 }
 
 export default function DownloadClusterPDF({
@@ -16,6 +18,8 @@ export default function DownloadClusterPDF({
   fileName,
   hideSelectors,
   btnClassName,
+  reportTypeId,
+  dashboardId,
 }: DownloadClusterPDFProps) {
   const [busy, setBusy] = useState(false);
 
@@ -84,6 +88,23 @@ export default function DownloadClusterPDF({
       pdf.save(
         fileName && fileName.trim() !== "" ? fileName : "eco_clustering.pdf"
       );
+
+      // Registrar reporte PDF de clustering (dashboard 2)
+      try {
+        const tipoReporte = reportTypeId ?? 1;
+        const dashboard = dashboardId ?? 2;
+
+        await fetch("/api/reportes", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id_tipo_reporte: tipoReporte,
+            id_dashboard: dashboard,
+          }),
+        });
+      } catch (error) {
+        console.error("Error registrando reporte de clustering:", error);
+      }
     } finally {
       setBusy(false);
     }

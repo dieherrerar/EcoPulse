@@ -182,6 +182,20 @@ export default function TempTimeSeriesChart<T extends AnyRecord = AnyRecord>(
     return [min - pad, max + pad] as [number, number];
   }, [processed, yDataKey]);
 
+  const yTicks = useMemo(() => {
+    const [min, max] = yDomain;
+    if (!Number.isFinite(min) || !Number.isFinite(max)) return [] as number[];
+    if (min === max) return [min];
+    const steps = 6;
+    const out: number[] = [];
+    for (let i = 0; i < steps; i++) {
+      const t = min + ((max - min) * i) / (steps - 1);
+      const rounded = Number(t.toFixed(6));
+      if (!out.includes(rounded)) out.push(rounded);
+    }
+    return out;
+  }, [yDomain]);
+
   return (
     <div className="Line-card p-2 h-100">
       <div className="small text-muted">{title}</div>
@@ -206,6 +220,7 @@ export default function TempTimeSeriesChart<T extends AnyRecord = AnyRecord>(
             <YAxis
               domain={yDomain as any}
               allowDecimals={false}
+              ticks={yTicks as any}
               tickFormatter={(v: any) => {
                 const num = typeof v === 'number' ? v : parseFloat(v);
                 return Number.isFinite(num) ? Math.round(num).toString() : String(v);

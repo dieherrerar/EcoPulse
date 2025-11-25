@@ -16,7 +16,9 @@ type NotifyPayload = {
   open_modal: boolean;
 };
 
-function mapLevel(nivel: NotifyPayload["alert"]["nivel_alerta"]): AlertRow["level"] {
+function mapLevel(
+  nivel: NotifyPayload["alert"]["nivel_alerta"]
+): AlertRow["level"] {
   if (nivel === "bajo") return "info";
   if (nivel === "medio") return "warning";
   return "critical";
@@ -29,6 +31,7 @@ export default function AlertsSSEListener() {
   useEffect(() => {
     openRef.current = open;
   }, [open]);
+
   // cooldown de 10 minutos entre modales
   const initialLast = (() => {
     try {
@@ -41,7 +44,7 @@ export default function AlertsSSEListener() {
   })();
   const lastShownAtRef = useRef<number>(initialLast);
 
-  // Persist and compare last seen alert key to support F5
+  // Persistir y comparar última alerta vista (para evitar repetir la misma)
   const getLastSeenKey = () => {
     try {
       if (typeof window === "undefined") return "";
@@ -52,14 +55,17 @@ export default function AlertsSSEListener() {
   };
   const setLastSeenKey = (key: string) => {
     try {
-      if (typeof window !== "undefined") window.localStorage.setItem("alert_modal_last_seen_key", key);
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem("alert_modal_last_seen_key", key);
+      }
     } catch {}
   };
 
   const TEN_MIN = 10 * 60 * 1000;
-  const POLL_FALLBACK_MS = 120_000; // respeta el pooling de dashboard
+  const POLL_FALLBACK_MS = 10 * 60 * 1000; // fallback de polling cada 10 minutos
 
-  const canOpenNow = () => Date.now() - (lastShownAtRef.current || 0) >= TEN_MIN;
+  const canOpenNow = () =>
+    Date.now() - (lastShownAtRef.current || 0) >= TEN_MIN;
   const markOpenedNow = () => {
     const now = Date.now();
     lastShownAtRef.current = now;
@@ -68,7 +74,7 @@ export default function AlertsSSEListener() {
     } catch {}
   };
 
-  // Load latest alert on mount and on interval as fallback
+  // Polling de respaldo: sólo abre si hay alerta nueva y se respeta cooldown
   const checkLatestAlert = async () => {
     try {
       const r = await fetch(`/api/mostrar_alertas`, { cache: "no-store" });
@@ -85,36 +91,39 @@ export default function AlertsSSEListener() {
         valor_anomalo?: string;
         columnas_afectadas?: string;
       };
-      const key = `${d.id_alerta}:${d.id_dato_dispositivo}:${d.fecha_hora_alerta ?? ""}`;
-      if (key && key !== getLastSeenKey()) {
-        // Build alert and maybe open respecting cooldown
-        const mapped: AlertRow = {
-          id_alerta: d.id_alerta,
-          id_dato_dispositivo: d.id_dato_dispositivo,
-          title: d.nombre_alerta,
-          message: `Nueva alerta detectada`,
-          level: "warning",
-          detalle_tipo_alerta: d.tipo_alerta,
-          detalle_fecha_hora_alerta: d.fecha_hora_alerta,
-          detalle_valor_anomalo: d.valor_anomalo,
-          detalle_columnas_afectadas: d.columnas_afectadas,
-        };
-        setAlert(mapped);
-        // Abrir si pasó cooldown o si aún no hay modal abierto (F5)
-        if (canOpenNow() || !openRef.current) {
-          setOpen(true);
-          markOpenedNow();
-          setLastSeenKey(key);
-        }
-      }
-    } catch {}
+
+      const key = `${d.id_alerta}:${d.id_dato_dispositivo}:${
+        d.fecha_hora_alerta ?? ""
+      }`;
+      if (!key) return;
+
+      const lastKey = getLastSeenKey();
+      // Si es la misma alerta y no han pasado 10 minutos, no abrir
+      if (key === lastKey && !canOpenNow()) return;
+
+      const mapped: AlertRow = {
+        id_alerta: d.id_alerta,
+        id_dato_dispositivo: d.id_dato_dispositivo,
+        title: d.nombre_alerta,
+        message: `Nueva alerta detectada`,
+        level: "warning",
+        detalle_tipo_alerta: d.tipo_alerta,
+        detalle_fecha_hora_alerta: d.fecha_hora_alerta,
+        detalle_valor_anomalo: d.valor_anomalo,
+        detalle_columnas_afectadas: d.columnas_afectadas,
+      };
+      setAlert(mapped);
+
+      setOpen(true);
+      markOpenedNow();
+      setLastSeenKey(key);
+    } catch {
+      // silencioso
+    }
   };
 
   useEffect(() => {
-    // Initial check so F5 can show pending alert
-    checkLatestAlert();
-
-    // SSE subscription
+    // Suscripción SSE
     const es = new EventSource("/api/alerts/stream");
     es.onmessage = (ev) => {
       try {
@@ -122,7 +131,6 @@ export default function AlertsSSEListener() {
         const a = data.alert;
         if (!a) return;
 
-        // Base alert from SSE
         const base: AlertRow = {
           id_alerta: a.id_alerta,
           id_dato_dispositivo: a.id_dato_dispositivo,
@@ -134,11 +142,12 @@ export default function AlertsSSEListener() {
           ts: a.timestamp,
         };
 
-        // Try to enrich with detalle_alerta
         fetch(
           `/api/mostrar_alertas/one?id_alerta=${encodeURIComponent(
             String(a.id_alerta)
-          )}&id_dato_dispositivo=${encodeURIComponent(String(a.id_dato_dispositivo))}`
+          )}&id_dato_dispositivo=${encodeURIComponent(
+            String(a.id_dato_dispositivo)
+          )}`
         )
           .then(async (r) => {
             if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -155,7 +164,6 @@ export default function AlertsSSEListener() {
 
             const enriched: AlertRow = {
               ...base,
-              // Prefer detail values if present
               title: d?.nombre_alerta ?? base.title,
               detalle_tipo_alerta: d?.tipo_alerta,
               detalle_fecha_hora_alerta: d?.fecha_hora_alerta,
@@ -166,26 +174,30 @@ export default function AlertsSSEListener() {
             setAlert(enriched);
           })
           .catch(() => {
-            // Fall back to base if detalle fetch fails
             setAlert(base);
           })
           .finally(() => {
             if (!data.open_modal) return;
 
-            // Respetar cooldown de 10 minutos entre modales
-            const eventKey = `${a.id_alerta}:${a.id_dato_dispositivo}:${a.timestamp ?? ""}`;
-            if (canOpenNow() || (!openRef.current && eventKey !== getLastSeenKey())) {
-              setOpen(true);
-              markOpenedNow();
-              setLastSeenKey(eventKey);
-            }
+            const eventKey = `${a.id_alerta}:${a.id_dato_dispositivo}:${
+              a.timestamp ?? ""
+            }`;
+            if (!eventKey) return;
+
+            const lastKey = getLastSeenKey();
+            // Si es la misma alerta y no han pasado 10 minutos, no abrir
+            if (eventKey === lastKey && !canOpenNow()) return;
+
+            setOpen(true);
+            markOpenedNow();
+            setLastSeenKey(eventKey);
           });
       } catch (e) {
         console.error("Error SSE:", e);
       }
     };
 
-    // Fallback polling aligned with dashboard refresh
+    // Fallback polling alineado con el dashboard
     const tid = setInterval(checkLatestAlert, POLL_FALLBACK_MS);
 
     return () => {
@@ -196,5 +208,7 @@ export default function AlertsSSEListener() {
 
   if (!alert) return null;
 
-  return <AlertModal open={open} onClose={() => setOpen(false)} alert={alert} />;
+  return (
+    <AlertModal open={open} onClose={() => setOpen(false)} alert={alert} />
+  );
 }

@@ -16,19 +16,22 @@ interface Props {
   graficos: Grafico[];
   chartNodeIds: Record<number, string>;
   kpiNodeId: string;
+  reportTypeId?: number;
+  dashboardId?: number;
 }
 
 // ðŸ§¾ Descripciones de cada grÃ¡fico
 const CAPTIONS: Record<number, string> = {
-  2: "Este gráfico compara las variaciones simultáneas de dióxido de carbono (CO₂) y temperatura ambiental, permitiendo analizar su correlación temporal. Un incremento conjunto puede indicar espacios cerrados con poca ventilación o mayor actividad metabólica y de ocupación. La divergencia entre ambas curvas evidencia posibles efectos meteorológicos o cambios en la densidad del aire que afectan la dispersión de gases.",
-  3: "Representa la concentración promedio diaria de material particulado (PM2.5) y la compara con el valor límite recomendado por la Organización Mundial de la Salud (OMS). Este gráfico permite evaluar el cumplimiento normativo y detectar episodios de contaminación puntual. Valores consistentemente por debajo del límite reflejan una atmósfera saludable, mientras que los sobrepasos reiterados advierten necesidad de medidas correctivas.",
-  4: "Este gráfico representa la proporción relativa de material particulado suspendido en el aire según su tamaño o tipo. Permite identificar cuál fracción de partículas (por ejemplo, PM1, PM2.5 o PM10) contribuye en mayor medida a la carga total de contaminación atmosférica. Un predominio de PM2.5 sugiere una presencia significativa de partículas finas, las más perjudiciales para la salud respiratoria.",
-  5: "Este gráfico analiza la relación entre la concentración de CO₂ y el consumo energético o de recursos durante el periodo monitoreado. Un aumento paralelo puede evidenciar mayor ocupación, uso intensivo de equipos o ventilación insuficiente. La correlación entre ambos indicadores es clave para optimizar eficiencia energética y calidad del aire interior.",
-  7: "La serie temporal muestra la evolución de las concentraciones de dióxido de carbono (CO₂) durante el periodo seleccionado. Esta visualización permite detectar picos de emisión asociados a actividad humana o a condiciones de ventilación limitadas. Tendencias ascendentes sostenidas podrían indicar una acumulación de gases en zonas de baja circulación de aire.",
-  8: "Este gráfico refleja la variación diaria del material particulado fino (PM2.5). Permite observar patrones recurrentes, como incrementos durante horas punta o en condiciones meteorológicas adversas. La estabilidad en valores bajos sugiere un ambiente limpio y controlado, mientras que los picos abruptos advierten episodios de contaminación puntual.", //listo
-  9: "La gráfica muestra la dinámica térmica del entorno monitoreado, destacando las fluctuaciones diarias de temperatura. Las variaciones permiten correlacionar los cambios térmicos con los niveles de contaminación o con la ocurrencia de precipitaciones. Temperaturas estables indican condiciones atmosféricas homogéneas, mientras que amplitudes térmicas amplias reflejan influencia meteorológica significativa.",
-  10: "Indica la variación de la humedad del aire a lo largo del tiempo. Este parámetro influye directamente en la formación y comportamiento de las partículas suspendidas y en la sensación térmica. Niveles altos pueden favorecer la condensación y el aumento temporal de PM, mientras que valores bajos reflejan aire seco y mayor dispersión.",
-  11: "Este gráfico compara los valores medios de PM2.5 para cada día de la semana, evidenciando patrones de contaminación asociados a la actividad humana. Días laborales suelen mostrar concentraciones más altas debido al tránsito y actividad industrial, mientras que fines de semana tienden a valores más bajos. La comparación facilita la planificación de estrategias de mitigación según el comportamiento semanal.",
+  1: "Este gráfico compara las variaciones simultáneas de dióxido de carbono (CO₂) y temperatura ambiental, permitiendo analizar su correlación temporal. Un incremento conjunto puede indicar espacios cerrados con poca ventilación o mayor actividad metabólica y de ocupación. La divergencia entre ambas curvas evidencia posibles efectos meteorológicos o cambios en la densidad del aire que afectan la dispersión de gases.",
+  2: "Representa la concentración promedio diaria de material particulado (PM2.5) y la compara con el valor límite recomendado por la Organización Mundial de la Salud (OMS). Este gráfico permite evaluar el cumplimiento normativo y detectar episodios de contaminación puntual. Valores consistentemente por debajo del límite reflejan una atmósfera saludable, mientras que los sobrepasos reiterados advierten necesidad de medidas correctivas.",
+  3: "Este gráfico representa la proporción relativa de material particulado suspendido en el aire según su tamaño o tipo. Permite identificar cuál fracción de partículas (por ejemplo, PM1, PM2.5 o PM10) contribuye en mayor medida a la carga total de contaminación atmosférica. Un predominio de PM2.5 sugiere una presencia significativa de partículas finas, las más perjudiciales para la salud respiratoria.",
+  4: "Este gráfico analiza la relación entre la concentración de CO₂ y el consumo energético o de recursos durante el periodo monitoreado. Un aumento paralelo puede evidenciar mayor ocupación, uso intensivo de equipos o ventilación insuficiente. La correlación entre ambos indicadores es clave para optimizar eficiencia energética y calidad del aire interior.",
+  5: "Este gráfico resume patrones ambientales detectados a partir de los datos históricos de los sensores, identificando combinaciones típicas de temperatura, humedad, material particulado y otros parámetros. Permite distinguir comportamientos recurrentes de episodios atípicos y apoya la toma de decisiones para la gestión ambiental.",
+  6: "La serie temporal muestra la evolución de las concentraciones de dióxido de carbono (CO₂) durante el periodo seleccionado. Esta visualización permite detectar picos de emisión asociados a actividad humana o a condiciones de ventilación limitadas. Tendencias ascendentes sostenidas podrían indicar una acumulación de gases en zonas de baja circulación de aire.",
+  7: "Este gráfico refleja la variación diaria del material particulado fino (PM2.5). Permite observar patrones recurrentes, como incrementos durante horas punta o en condiciones meteorológicas adversas. La estabilidad en valores bajos sugiere un ambiente limpio y controlado, mientras que los picos abruptos advierten episodios de contaminación puntual.", //listo
+  8: "La gráfica muestra la dinámica térmica del entorno monitoreado, destacando las fluctuaciones diarias de temperatura. Las variaciones permiten correlacionar los cambios térmicos con los niveles de contaminación o con la ocurrencia de precipitaciones. Temperaturas estables indican condiciones atmosféricas homogéneas, mientras que amplitudes térmicas amplias reflejan influencia meteorológica significativa.",
+  9: "Indica la variación de la humedad del aire a lo largo del tiempo. Este parámetro influye directamente en la formación y comportamiento de las partículas suspendidas y en la sensación térmica. Niveles altos pueden favorecer la condensación y el aumento temporal de PM, mientras que valores bajos reflejan aire seco y mayor dispersión.",
+  10: "Este gráfico compara los valores medios de PM2.5 para cada día de la semana, evidenciando patrones de contaminación asociados a la actividad humana. Días laborales suelen mostrar concentraciones más altas debido al tránsito y actividad industrial, mientras que fines de semana tienden a valores más bajos. La comparación facilita la planificación de estrategias de mitigación según el comportamiento semanal.",
 };
 
 const PAR_MARGIN_X = 60;
@@ -82,6 +85,8 @@ export default function DownloadPDF({
   graficos,
   chartNodeIds,
   kpiNodeId,
+  reportTypeId,
+  dashboardId,
 }: Props) {
   const [busy, setBusy] = useState(false);
 
@@ -358,6 +363,24 @@ export default function DownloadPDF({
 
       const name = `EcoPulse_${new Date(date).toISOString().slice(0, 10)}.pdf`;
       doc.save(name);
+
+      // Registrar reporte PDF generado
+      try {
+        const payload: { id_tipo_reporte: number; id_dashboard?: number } = {
+          id_tipo_reporte: reportTypeId ?? 1,
+        };
+        if (typeof dashboardId === "number") {
+          payload.id_dashboard = dashboardId;
+        }
+
+        await fetch("/api/reportes", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      } catch (error) {
+        console.error("Error registrando reporte PDF:", error);
+      }
     } finally {
       setBusy(false);
     }

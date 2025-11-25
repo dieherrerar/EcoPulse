@@ -5,7 +5,7 @@ import Cluster3D from "../../../components/charts/Cluster3D";
 import FullPageLoader from "../../../components/FullPageLoader";
 // Alertas eliminadas en esta vista; se muestran en el dashboard
 
-const POLL_MS = 120_000;
+const POLL_MS = 10 * 60 * 1000;
 
 export default function ClusterrPage() {
   const [dates, setDates] = useState<string[]>([]);

@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
     const start = url.searchParams.get("start");
     const end = url.searchParams.get("end");
 
-    // Construir y ejecutar consulta según exista dateParam o no
+    // Construir y ejecutar consulta segun exista dateParam o no
     let result;
     if (start && end) {
       result = await query(
@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    const headers = Object.keys(rows[0]); //cabecera del CSV
+    const headers = Object.keys(rows[0]); // cabecera del CSV
 
     // Construir CSV
     const csvLines: String[] = [];
@@ -74,7 +74,8 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorMessage =
+      error instanceof Error ? error.message : String(error);
     return new Response(
       JSON.stringify({ success: false, error: errorMessage }),
       {
@@ -84,3 +85,4 @@ export async function GET(req: NextRequest) {
     );
   }
 }
+

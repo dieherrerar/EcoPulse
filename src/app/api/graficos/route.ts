@@ -1,48 +1,35 @@
 import { NextResponse } from "next/server";
 import { query } from "../../lib/db";
 
+// Configuración: id_data base para leer/escribir el estado "activo" de los gráficos.
+// Si más adelante quieres manejar varios datasets, se puede hacer dinámico.
+const DEFAULT_DATA_ID = 1;
+
+type GraficoRow = {
+  id_grafico: number;
+  titulo_grafico: string;
+  activo: number;
+};
+
 export async function GET() {
   try {
     const result = await query(
-      "SELECT id_grafico, titulo_grafico, activo FROM grafico WHERE id_grafico BETWEEN 2 AND 11 ORDER BY id_grafico ASC;"
+      `SELECT
+         g.id_grafico,
+         g.titulo_grafico,
+         COALESCE(dgd.activo, 1) AS activo
+       FROM grafico g
+       LEFT JOIN detalle_grafico_data dgd
+         ON dgd.id_grafico = g.id_grafico
+        AND dgd.id_data = $1
+       WHERE g.id_grafico BETWEEN 1 AND 10
+       ORDER BY g.id_grafico ASC;`,
+      [DEFAULT_DATA_ID]
     );
 
-    const dbRows = result.rows as Array<{ id_grafico: number; titulo_grafico: string; activo: number }>;
+    const dbRows = result.rows as GraficoRow[];
 
-    const defaults: Array<{ id_grafico: number; titulo_grafico: string; activo: number }> = [
-      { id_grafico: 2, titulo_grafico: "Relación CO₂ vs Temperatura", activo: 1 },
-      { id_grafico: 3, titulo_grafico: "Barras PM Promedio", activo: 1 },
-      { id_grafico: 4, titulo_grafico: "Distribución de Partículas", activo: 1 },
-      { id_grafico: 5, titulo_grafico: "CO₂ vs Consumo en el tiempo", activo: 1 },
-      { id_grafico: 6, titulo_grafico: "Serie temporal CO₂", activo: 1 },
-      { id_grafico: 7, titulo_grafico: "Serie temporal PM2.5", activo: 1 },
-      { id_grafico: 8, titulo_grafico: "Serie temporal Temperatura", activo: 1 },
-      { id_grafico: 9, titulo_grafico: "Serie temporal Humedad", activo: 1 },
-    ];
-
-    const byId = new Map(dbRows.map((r) => [Number(r.id_grafico), r]));
-    const defaultMap = new Map(defaults.map((d) => [Number(d.id_grafico), d]));
-    const allIds = Array.from(
-      new Set<number>([
-        ...defaults.map((d) => Number(d.id_grafico)),
-        ...dbRows.map((r) => Number(r.id_grafico)),
-      ])
-    )
-      .filter((id) => id !== 6)
-      .sort((a, b) => a - b);
-
-    const merged = allIds.map((id) => {
-      const r = byId.get(id);
-      const d = defaultMap.get(id);
-      return {
-        id_grafico: id,
-        titulo_grafico: r?.titulo_grafico ?? d?.titulo_grafico ?? `Gráfico ${id}`,
-        activo: typeof r?.activo === "number" ? r!.activo : d?.activo ?? 1,
-      };
-            
-    });
-
-    return NextResponse.json({ success: true, data: merged });
+    return NextResponse.json({ success: true, data: dbRows });
   } catch (e: any) {
     return NextResponse.json(
       { success: false, error: e?.message ?? "Error obteniendo graficos" },
@@ -57,6 +44,7 @@ export async function PUT(req: Request) {
       id_grafico: number;
       activo: number;
     }>;
+
     if (
       !Array.isArray(body) ||
       body.some(
@@ -67,38 +55,32 @@ export async function PUT(req: Request) {
       )
     ) {
       return NextResponse.json(
-        { success: false, error: "Payload Inválido" },
+        { success: false, error: "Payload inválido" },
         { status: 400 }
       );
     }
 
     try {
       await query("BEGIN;");
-      let titles: Record<number, string> = {
-        2: "Relación CO₂ vs Temperatura",
-        3: "Barras PM Promedio",
-        4: "Distribución de Partículas",
-        5: "CO₂ vs Consumo en el tiempo",
-        6: "Serie temporal CO₂",
-        7: "Serie temporal PM2.5",
-        8: "Serie temporal Temperatura",
-        9: "Serie temporal Humedad",
-      };
-      (titles as any)[10] = "Serie temporal Humedad";
-      (titles as any)[11] = "PM2.5 promedio por dia de semana";
+
       for (const { id_grafico, activo } of body) {
+        // Actualiza si existe registro para (id_data, id_grafico)
         const upd = await query(
-          `UPDATE grafico
-           SET activo = $1
-           WHERE id_grafico = $2;`,
-          [activo, id_grafico]
+          `UPDATE detalle_grafico_data
+             SET activo = $1,
+                 fecha_modificacion = CURRENT_DATE
+           WHERE id_data = $2
+             AND id_grafico = $3;`,
+          [activo, DEFAULT_DATA_ID, id_grafico]
         );
+
+        // Si no existe, inserta uno mínimo (sin pisar descripciones de otros id_data)
         if ((upd as any)?.rowCount === 0) {
-          const title = titles[id_grafico] ?? `Gráfico ${id_grafico}`;
           await query(
-            `INSERT INTO grafico (id_grafico, titulo_grafico, activo)
-             VALUES ($1, $2, $3);`,
-            [id_grafico, title, activo]
+            `INSERT INTO detalle_grafico_data
+               (id_data, id_grafico, fecha_modificacion, descripcion_relacion, variables_utilizadas, activo)
+             VALUES ($1, $2, CURRENT_DATE, NULL, '{}'::jsonb, $3);`,
+            [DEFAULT_DATA_ID, id_grafico, activo]
           );
         }
       }
@@ -119,3 +101,4 @@ export async function PUT(req: Request) {
     );
   }
 }
+

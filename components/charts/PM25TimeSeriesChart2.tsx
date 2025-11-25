@@ -96,9 +96,10 @@ export default function PM25TimeSeriesChart<T extends AnyRecord = AnyRecord>(
 
     const sorted = mapped.sort((a, b) => (a.__xMs as number) - (b.__xMs as number));
 
-    const intervalMs = typeof resampleMinutes === "number" && resampleMinutes > 0
-      ? resampleMinutes * 60 * 1000
-      : 0;
+    const intervalMs =
+      typeof resampleMinutes === "number" && resampleMinutes > 0
+        ? resampleMinutes * 60 * 1000
+        : 0;
 
     if (!intervalMs) return sorted;
 
@@ -116,7 +117,10 @@ export default function PM25TimeSeriesChart<T extends AnyRecord = AnyRecord>(
 
     const resampled: AnyRecord[] = Array.from(groups.entries())
       .sort((a, b) => a[0] - b[0])
-      .map(([bin, g]) => ({ __xMs: bin, [yDataKey]: g.sum / Math.max(1, g.count) }));
+      .map(([bin, g]) => ({
+        __xMs: bin,
+        [yDataKey]: g.sum / Math.max(1, g.count),
+      }));
 
     // Rellenar huecos largos con ceros si se pide
     if (!fillGapsToZero || resampled.length <= 1) return resampled;
@@ -145,10 +149,12 @@ export default function PM25TimeSeriesChart<T extends AnyRecord = AnyRecord>(
     }));
   }, [processed, compactX, tickFormat]);
 
-  const xTypeInner: 'number' | 'category' = compactX ? 'category' : 'number';
-  const xDataKeyInner = compactX ? '__xLabel' : '__xMs';
-  const xDomainInner = compactX ? undefined : ["auto", "auto"] as const;
-  const xTickFormatterInner = compactX ? undefined : ((v: number) => tickFormat(new Date(v)));
+  const xTypeInner: "number" | "category" = compactX ? "category" : "number";
+  const xDataKeyInner = compactX ? "__xLabel" : "__xMs";
+  const xDomainInner = compactX ? undefined : (["auto", "auto"] as const);
+  const xTickFormatterInner = compactX
+    ? undefined
+    : ((v: number) => tickFormat(new Date(v)));
 
   // Ticks uniformes para eje X (exactamente 10 cuando sea posible)
   const xTicks = useMemo(() => {
@@ -159,7 +165,8 @@ export default function PM25TimeSeriesChart<T extends AnyRecord = AnyRecord>(
       const indices: number[] = [];
       for (let i = 0; i < 10; i++) {
         const idx = Math.round((i * (n - 1)) / 9);
-        if (indices.length === 0 || indices[indices.length - 1] !== idx) indices.push(idx);
+        if (indices.length === 0 || indices[indices.length - 1] !== idx)
+          indices.push(idx);
       }
       return indices.map((i) => categoricalData[i]?.__xLabel);
     }
@@ -194,6 +201,21 @@ export default function PM25TimeSeriesChart<T extends AnyRecord = AnyRecord>(
     return [min - pad, max + pad] as [number, number];
   }, [processed, yDataKey]);
 
+  // Ticks Y explícitos y únicos para evitar claves duplicadas
+  const yTicks = useMemo(() => {
+    const [min, max] = yDomain;
+    if (!Number.isFinite(min) || !Number.isFinite(max)) return [] as number[];
+    if (min === max) return [min];
+    const steps = 6;
+    const out: number[] = [];
+    for (let i = 0; i < steps; i++) {
+      const t = min + ((max - min) * i) / (steps - 1);
+      const rounded = Number(t.toFixed(6));
+      if (!out.includes(rounded)) out.push(rounded);
+    }
+    return out;
+  }, [yDomain]);
+
   return (
     <div className="Line-card p-2 h-100">
       <div className="small text-muted">{title}</div>
@@ -213,13 +235,19 @@ export default function PM25TimeSeriesChart<T extends AnyRecord = AnyRecord>(
               tickFormatter={xTickFormatterInner as any}
               interval={0}
               ticks={xTicks as any}
-              label={{ value: xLabel, angle: 0, position: "insideBottom", offset: -10 }}
+              label={{
+                value: xLabel,
+                angle: 0,
+                position: "insideBottom",
+                offset: -10,
+              }}
             />
             <YAxis
               domain={yDomain as any}
               allowDecimals={false}
+              ticks={yTicks as any}
               tickFormatter={(v: any) => {
-                const num = typeof v === 'number' ? v : parseFloat(v);
+                const num = typeof v === "number" ? v : parseFloat(v);
                 return Number.isFinite(num) ? Math.round(num).toString() : String(v);
               }}
             >
@@ -228,11 +256,11 @@ export default function PM25TimeSeriesChart<T extends AnyRecord = AnyRecord>(
             <Tooltip
               labelFormatter={(v: any) => {
                 // Soporta tanto eje numérico (ms) como categórico (string)
-                if (typeof v === 'number') return tickFormat(new Date(v));
+                if (typeof v === "number") return tickFormat(new Date(v));
                 return String(v);
               }}
               formatter={(value: any, name) => {
-                const num = typeof value === 'number' ? value : parseFloat(value);
+                const num = typeof value === "number" ? value : parseFloat(value);
                 const formatted = Number.isFinite(num) ? num.toFixed(1) : value;
                 return [formatted, name === yDataKey ? yLabel : String(name)];
               }}

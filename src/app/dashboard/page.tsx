@@ -30,7 +30,7 @@ const AlertsSSEListener = dynamic(
   { ssr: false }
 );
 
-const POLL_MS = 120_000; //2 minutos
+const POLL_MS = 10 * 60 * 1000; // 10 minutos
 
 type ToastState = { show: boolean; message: string };
 
@@ -151,17 +151,30 @@ const DashboardPage: NextPage = () => {
   useEffect(() => {
     // cuando cargues graficos desde GET
     if (graficos.length === 0) return;
-    const byId = new Map(graficos.map((g) => [Number(g.id_grafico), g.activo]));
+    // Normalizamos "activo" a número (1 = activo, 2 = inactivo)
+    const byId = new Map(
+      graficos.map((g) => [Number(g.id_grafico), Number(g.activo)])
+    );
     setChartVisibility({
-      AreaChartComp: (byId.get(5) ?? 1) === 1,
-      BarChartComp: (byId.get(3) ?? 1) === 1,
-      LineChartComp: (byId.get(2) ?? 1) === 1,
-      PieChartComp: (byId.get(4) ?? 1) === 1,
-      CO2TimeSeriesChart: (byId.get(7) ?? 1) === 1,
-      PM25TimeSeriesChart: (byId.get(8) ?? 1) === 1,
-      TempTimeSeriesChart: (byId.get(9) ?? 1) === 1,
-      HumidityTimeSeriesChart: (byId.get(10) ?? 1) === 1,
-      PM25WeekdayBarChart: (byId.get(11) ?? 1) === 1,
+      // 1: Relación CO2 vs Temperatura
+      LineChartComp: (byId.get(1) ?? 1) === 1,
+      // 2: PM promedio del día vs límite OMS
+      BarChartComp: (byId.get(2) ?? 1) === 1,
+      // 3: Distribución porcentual de partículas MP
+      PieChartComp: (byId.get(3) ?? 1) === 1,
+      // 4: CO2 vs consumo a lo largo del tiempo
+      AreaChartComp: (byId.get(4) ?? 1) === 1,
+      // 5: Patrones ambientales detectados (sin gráfico específico en dashboard por ahora)
+      // 6: Serie temporal CO₂
+      CO2TimeSeriesChart: (byId.get(6) ?? 1) === 1,
+      // 7: Serie temporal PM2.5
+      PM25TimeSeriesChart: (byId.get(7) ?? 1) === 1,
+      // 8: Serie temporal Temperatura
+      TempTimeSeriesChart: (byId.get(8) ?? 1) === 1,
+      // 9: Serie temporal Humedad
+      HumidityTimeSeriesChart: (byId.get(9) ?? 1) === 1,
+      // 10: PM2.5 promedio por día de semana
+      PM25WeekdayBarChart: (byId.get(10) ?? 1) === 1,
     });
   }, [graficos]);
 
@@ -293,7 +306,7 @@ const DashboardPage: NextPage = () => {
       </div>
     );
 
-  const { kpis, composition, stacked } = data;
+  const { kpis, composition, stacked, titulo_dashboard } = data;
 
   const kpisForPdf = [
     { id_kpi: 1, label: "MP promedio", value: kpis?.avgPM25 ?? "-" },
@@ -328,11 +341,13 @@ const DashboardPage: NextPage = () => {
           </div>
         </div>
       )}
-      <h2 className="mb-3 text-center">Dashboard Ambiental</h2>
+      <h2 className="mb-3 text-center">
+        {titulo_dashboard || "Dashboard Ambiental"}
+      </h2>
 
       {/* Selector de rango de fechas y botón de filtrado */}
       <div className="mb-4 d-flex gap-2 align-items-end flex-wrap">
-        <div>
+        <div className="filter-control-wrapper">
           <label htmlFor="fecha-inicio" className="form-label small">Fecha inicio</label>
           <input
             id="fecha-inicio"
@@ -344,7 +359,7 @@ const DashboardPage: NextPage = () => {
             onChange={(e) => setPendingStartDate(e.target.value)}
           />
         </div>
-        <div>
+        <div className="filter-control-wrapper">
           <label htmlFor="fecha-fin" className="form-label small">Fecha fin</label>
           <input
             id="fecha-fin"
@@ -356,9 +371,11 @@ const DashboardPage: NextPage = () => {
             onChange={(e) => setPendingEndDate(e.target.value)}
           />
         </div>
-        <div>
+        <div className="filter-control-wrapper">
+          {/* Label vacío para alinear alturas con los date pickers */}
+          <label className="form-label small d-block">&nbsp;</label>
           <button
-            className="dashboard-btn-blue"
+            className="dashboard-btn-blue w-100"
             onClick={handleApplyFilter}
             disabled={!pendingStartDate || !pendingEndDate}
           >
@@ -481,7 +498,7 @@ const DashboardPage: NextPage = () => {
                     xKey={"timestamp_registro" as any}
                     yKey={"co2_mhz19" as any}
                     title="CO2 dentro el rango seleccionado"
-                    resampleMinutes={30}
+                    resampleMinutes={10}
                     showDots={false}
                     compactX
                   />
@@ -501,7 +518,7 @@ const DashboardPage: NextPage = () => {
                     yKey={"mp2.5_ate" as any}
                     title="MP 2.5 dentro el rango seleccionado"
                     yLabel="MP 2.5 (µg/m³)"
-                    resampleMinutes={30}
+                    resampleMinutes={10}
                     showDots={false}
                     compactX
                   />
@@ -521,7 +538,7 @@ const DashboardPage: NextPage = () => {
                     yKey={"tem_bme280" as any}
                     title="Temperatura dentro el rango seleccionado"
                     yLabel="Temperatura (°C)"
-                    resampleMinutes={30}
+                    resampleMinutes={10}
                     showDots={false}
                     compactX
                   />
@@ -539,7 +556,7 @@ const DashboardPage: NextPage = () => {
                     data={data.timeseries}
                     xKey={"timestamp_registro" as any}
                     yKey={"hum_bme280" as any}
-                    resampleMinutes={30}
+                    resampleMinutes={10}
                     showDots={false}
                     compactX
                   />
@@ -550,22 +567,22 @@ const DashboardPage: NextPage = () => {
 
           {/* Si no es admin, mostrar botones de descarga. */}
           {!isAdmin && (
-            <div className="mb-4 d-flex gap-3 flex-wrap">
+          <div className="mb-4 d-flex gap-3 flex-wrap">
               <DownloadButton label="Extraer reporte CSV" start={appliedStartDate} end={appliedEndDate} />
               <DownloadPDF
                 date={selectedDate}
                 kpis={kpisForPdf}
                 graficos={graficos}
                 chartNodeIds={{
-                  2: "#chart-line",
-                  3: "#chart-bar",
-                  4: "#chart-pie",
-                  5: "#chart-area",
-                  7: "#chart-co2ts",
-                  8: "#chart-pm25ts",
-                  9: "#chart-temp",
-                  10: "#chart-hum",
-                  11: "#chart-pm25weekday",
+                  1: "#chart-line",         // Relación CO2 vs Temperatura
+                  2: "#chart-bar",          // PM promedio vs límite OMS
+                  3: "#chart-pie",          // Distribución porcentual MP
+                  4: "#chart-area",         // CO2 vs Consumo
+                  6: "#chart-co2ts",        // Serie temporal CO₂
+                  7: "#chart-pm25ts",       // Serie temporal PM2.5
+                  8: "#chart-temp",         // Serie temporal Temperatura
+                  9: "#chart-hum",          // Serie temporal Humedad
+                  10: "#chart-pm25weekday", // PM2.5 promedio por día de semana
                 }}
                 kpiNodeId="#kpis-dashboard"
               />
@@ -590,7 +607,7 @@ const DashboardPage: NextPage = () => {
               <div className="sticky-side">
                 <AdminChartPicker
                   title={"Seleccionar Gráficos"}
-                  graficos={draft}
+                  graficos={draft.filter((g) => Number(g.id_grafico) !== 5)}
                   onToggleGrafico={handleToggle}
                   onSave={handleSave}
                   onCancel={handleCancel}
@@ -610,4 +627,8 @@ const DashboardPage: NextPage = () => {
 };
 
 export default DashboardPage;
+
+
+
+
 

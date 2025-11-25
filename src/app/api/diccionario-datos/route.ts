@@ -3,9 +3,16 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
-    // Consulta explícita a la tabla y columnas indicadas
+    // Lee directamente desde la tabla real del diccionario
+    // Tabla: diccionario_dato
+    // Columnas: nombre_variable, descripcion_variable, rango_variable
+    // Se renombran a los nombres esperados por el frontend
     const result = await query(
-      "SELECT variable, descripcion, rango_observado FROM diccionario_datos;"
+      `SELECT
+         nombre_variable      AS variable,
+         descripcion_variable AS descripcion,
+         rango_variable       AS rango_observado
+       FROM diccionario_dato;`
     );
 
     const datos = result.rows.map((row: any) => ({
