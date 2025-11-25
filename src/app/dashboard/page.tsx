@@ -30,7 +30,7 @@ const AlertsSSEListener = dynamic(
   { ssr: false }
 );
 
-const POLL_MS = 120_000; //2 minutos
+const POLL_MS = 10 * 60 * 1000; // 10 minutos
 
 type ToastState = { show: boolean; message: string };
 
@@ -306,7 +306,7 @@ const DashboardPage: NextPage = () => {
       </div>
     );
 
-  const { kpis, composition, stacked } = data;
+  const { kpis, composition, stacked, titulo_dashboard } = data;
 
   const kpisForPdf = [
     { id_kpi: 1, label: "MP promedio", value: kpis?.avgPM25 ?? "-" },
@@ -341,11 +341,13 @@ const DashboardPage: NextPage = () => {
           </div>
         </div>
       )}
-      <h2 className="mb-3 text-center">Dashboard Ambiental</h2>
+      <h2 className="mb-3 text-center">
+        {titulo_dashboard || "Dashboard Ambiental"}
+      </h2>
 
       {/* Selector de rango de fechas y botón de filtrado */}
       <div className="mb-4 d-flex gap-2 align-items-end flex-wrap">
-        <div>
+        <div className="filter-control-wrapper">
           <label htmlFor="fecha-inicio" className="form-label small">Fecha inicio</label>
           <input
             id="fecha-inicio"
@@ -357,7 +359,7 @@ const DashboardPage: NextPage = () => {
             onChange={(e) => setPendingStartDate(e.target.value)}
           />
         </div>
-        <div>
+        <div className="filter-control-wrapper">
           <label htmlFor="fecha-fin" className="form-label small">Fecha fin</label>
           <input
             id="fecha-fin"
@@ -369,9 +371,11 @@ const DashboardPage: NextPage = () => {
             onChange={(e) => setPendingEndDate(e.target.value)}
           />
         </div>
-        <div>
+        <div className="filter-control-wrapper">
+          {/* Label vacío para alinear alturas con los date pickers */}
+          <label className="form-label small d-block">&nbsp;</label>
           <button
-            className="dashboard-btn-blue"
+            className="dashboard-btn-blue w-100"
             onClick={handleApplyFilter}
             disabled={!pendingStartDate || !pendingEndDate}
           >
@@ -494,7 +498,7 @@ const DashboardPage: NextPage = () => {
                     xKey={"timestamp_registro" as any}
                     yKey={"co2_mhz19" as any}
                     title="CO2 dentro el rango seleccionado"
-                    resampleMinutes={30}
+                    resampleMinutes={10}
                     showDots={false}
                     compactX
                   />
@@ -514,7 +518,7 @@ const DashboardPage: NextPage = () => {
                     yKey={"mp2.5_ate" as any}
                     title="MP 2.5 dentro el rango seleccionado"
                     yLabel="MP 2.5 (µg/m³)"
-                    resampleMinutes={30}
+                    resampleMinutes={10}
                     showDots={false}
                     compactX
                   />
@@ -534,7 +538,7 @@ const DashboardPage: NextPage = () => {
                     yKey={"tem_bme280" as any}
                     title="Temperatura dentro el rango seleccionado"
                     yLabel="Temperatura (°C)"
-                    resampleMinutes={30}
+                    resampleMinutes={10}
                     showDots={false}
                     compactX
                   />
@@ -552,7 +556,7 @@ const DashboardPage: NextPage = () => {
                     data={data.timeseries}
                     xKey={"timestamp_registro" as any}
                     yKey={"hum_bme280" as any}
-                    resampleMinutes={30}
+                    resampleMinutes={10}
                     showDots={false}
                     compactX
                   />
@@ -623,4 +627,8 @@ const DashboardPage: NextPage = () => {
 };
 
 export default DashboardPage;
+
+
+
+
 

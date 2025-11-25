@@ -69,6 +69,12 @@
   margin-bottom: 0.6rem;
 }
 
+/* Contenedores de controles de filtro (fechas + botón) */
+.filter-control-wrapper {
+  flex: 0 0 210px;
+  max-width: 210px;
+}
+
 @media (min-width: 992px) {
   .admin-checklist:hover {
     box-shadow: 0 4px 18px rgba(30, 80, 60, 0.1);
@@ -94,3 +100,4 @@
     display: none; /* ya se ve redundante en mobile */
   }
 }
+

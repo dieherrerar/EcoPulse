@@ -96,9 +96,10 @@ export default function CO2TimeSeriesChart<T extends AnyRecord = AnyRecord>(
 
     const sorted = mapped.sort((a, b) => (a.__xMs as number) - (b.__xMs as number));
 
-    const intervalMs = typeof resampleMinutes === "number" && resampleMinutes > 0
-      ? resampleMinutes * 60 * 1000
-      : 0;
+    const intervalMs =
+      typeof resampleMinutes === "number" && resampleMinutes > 0
+        ? resampleMinutes * 60 * 1000
+        : 0;
 
     if (!intervalMs) return sorted;
 

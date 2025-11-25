@@ -33,6 +33,7 @@ export interface TempCo2Point {
 }
 
 export interface DashboardPayload {
+  titulo_dashboard?: string;
   kpis: KPIs;
   timeseries: TimePoint[];
   composition: CompositionDatum[];

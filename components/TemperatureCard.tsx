@@ -348,7 +348,7 @@ export default function TemperatureCard({ city, endpoint }: TemperatureCardProps
     }
 
     fetchTemp();
-    const interval = setInterval(fetchTemp, 5 * 60 * 1000);
+    const interval = setInterval(fetchTemp, 10 * 60 * 1000);
     return () => clearInterval(interval);
   }, [endpoint]);
 

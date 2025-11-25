@@ -57,7 +57,7 @@ export default function Alertas() {
 
   useEffect(() => {
     fetchAlertas(); // carga inicial
-    const interval = setInterval(fetchAlertas, 60000); // cada 1 min
+    const interval = setInterval(fetchAlertas, 10 * 60 * 1000); // cada 10 min
     return () => clearInterval(interval);
   }, [fetchAlertas]); // ✅ ahora la referencia es estable, no da warning
 
