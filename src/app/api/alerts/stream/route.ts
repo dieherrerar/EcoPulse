@@ -1,16 +1,7 @@
 // src/app/api/alerts/stream/route.ts
 import { NextResponse } from "next/server";
-import { Pool } from "pg";
 import type { Notification } from "pg";
-
-// Pool local solo para el SSE (no toca tu lib/db)
-const pool = new Pool({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  password: process.env.DB_PASSWORD,
-  port: Number(process.env.DB_PORT),
-});
+import { pool } from "../../../lib/db";
 
 export async function GET() {
   const client = await pool.connect();

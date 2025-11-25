@@ -39,7 +39,7 @@ export default function AdminChartPicker(props: AdminChartPickerProps) {
                 className="form-check-input me-2"
                 type="checkbox"
                 id={`grafico-${grafico.id_grafico}`}
-                checked={grafico.activo === 1}
+                checked={Number(grafico.activo) === 1}
                 onChange={() => onToggleGrafico(Number(grafico.id_grafico))}
               />
               <label

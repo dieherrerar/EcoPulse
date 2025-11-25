@@ -1,22 +1,13 @@
 // src/app/api/mostrar_alertas/route.ts
 import { NextResponse } from "next/server";
-import { Pool } from "pg";
+import { query } from "../../lib/db";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// Pool simple; ajusta SSL si corresponde a tu despliegue
-const pool = new Pool({
-  host: process.env.DB_HOST,
-  port: Number(process.env.DB_PORT ?? 5432),
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-});
-
 export async function GET() {
   try {
-    const { rows } = await pool.query(
+    const result = await query(
       `
       SELECT
         d.id_alerta,
@@ -24,8 +15,7 @@ export async function GET() {
         a.nombre_alerta,
         t.nivel_alerta AS tipo_alerta,
         to_char(d.fecha_hora_alerta, 'YYYY-MM-DD HH24:MI:SS') AS fecha_hora_alerta,
-        d.valor_anomalo::text AS valor_anomalo,
-        d.columnas_afectadas
+        d.valor_anomalo::text AS valor_anomalo
       FROM public.detalle_alerta d
       JOIN public.alerta a       ON d.id_alerta = a.id_alerta
       JOIN public.tipo_alerta t  ON a.id_tipo_alerta = t.id_tipo_alerta
@@ -33,6 +23,8 @@ export async function GET() {
       LIMIT 20;
       `
     );
+
+    const rows = result.rows;
 
     return NextResponse.json({ success: true, data: rows }, { status: 200 });
   } catch (err: any) {
