@@ -1,12 +1,10 @@
 "use client";
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
 
 export default function Admin() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
