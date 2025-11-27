@@ -304,7 +304,10 @@ function WeatherIcon({ category }: { category: WeatherCategory }) {
   );
 }
 
-export default function TemperatureCard({ city, endpoint }: TemperatureCardProps) {
+export default function TemperatureCard({
+  city,
+  endpoint,
+}: TemperatureCardProps) {
   const [temp, setTemp] = useState<number | null>(null);
   const [category, setCategory] = useState<WeatherCategory>("unknown");
   const [loading, setLoading] = useState<boolean>(true);
@@ -329,9 +332,7 @@ export default function TemperatureCard({ city, endpoint }: TemperatureCardProps
         }
 
         const summaryText = (data?.summary ?? data?.icon ?? "").toString();
-        setCategory(
-          summaryText ? categorizeCondition(summaryText) : "unknown"
-        );
+        setCategory(summaryText ? categorizeCondition(summaryText) : "unknown");
       } catch {
         setTemp(null);
         setCategory("unknown");
@@ -352,12 +353,11 @@ export default function TemperatureCard({ city, endpoint }: TemperatureCardProps
     return () => clearInterval(interval);
   }, [endpoint]);
 
-  const displayTemp =
-    loading
-      ? "Cargando..."
-      : temp === null || Number.isNaN(temp)
-      ? "N/A"
-      : `${temp.toFixed(1)} Â°C`;
+  const displayTemp = loading
+    ? "Cargando..."
+    : temp === null || Number.isNaN(temp)
+    ? "N/A"
+    : `${temp.toFixed(1)}°C`;
 
   const conditionLabel =
     category === "sunny"
@@ -378,7 +378,7 @@ export default function TemperatureCard({ city, endpoint }: TemperatureCardProps
       ? "Vientos fuertes"
       : category === "snow"
       ? "Nieve"
-      : "CondiciÃ³n actual";
+      : "Condición actual";
 
   return (
     <div className="Kpicard p-3 h-100 d-flex flex-column justify-content-between">
@@ -399,6 +399,3 @@ export default function TemperatureCard({ city, endpoint }: TemperatureCardProps
     </div>
   );
 }
-
-
-
