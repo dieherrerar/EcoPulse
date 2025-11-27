@@ -57,7 +57,11 @@ export default function ClusterrPage() {
       try {
         const res = await fetch("/api/dates", { cache: "no-store" });
         const json = await res.json();
-        if (json.success && Array.isArray(json.dates) && json.dates.length > 0) {
+        if (
+          json.success &&
+          Array.isArray(json.dates) &&
+          json.dates.length > 0
+        ) {
           setDates(json.dates);
           setSelectedDate(json.dates[json.dates.length - 1]); // última fecha
         }
@@ -92,7 +96,10 @@ export default function ClusterrPage() {
       setLoading(true);
       setErr(null);
       try {
-        const params = new URLSearchParams({ start: appliedStartDate, end: appliedEndDate });
+        const params = new URLSearchParams({
+          start: appliedStartDate,
+          end: appliedEndDate,
+        });
         const r = await fetch(`/api/clusters?${params.toString()}`, {
           cache: "no-store",
         });
@@ -117,7 +124,10 @@ export default function ClusterrPage() {
 
     const id = setInterval(async () => {
       try {
-        const params = new URLSearchParams({ start: appliedStartDate, end: appliedEndDate });
+        const params = new URLSearchParams({
+          start: appliedStartDate,
+          end: appliedEndDate,
+        });
         const r = await fetch(`/api/clusters?${params.toString()}`, {
           cache: "no-store",
         });
@@ -152,7 +162,9 @@ export default function ClusterrPage() {
         {/* Selector de rango de fechas y botón de filtrado */}
         <div className="mb-4 d-flex gap-2 align-items-end flex-wrap">
           <div>
-            <label htmlFor="fecha-inicio" className="form-label small">Fecha inicio</label>
+            <label htmlFor="fecha-inicio" className="form-label small">
+              Fecha inicio
+            </label>
             <input
               id="fecha-inicio"
               type="date"
@@ -164,7 +176,9 @@ export default function ClusterrPage() {
             />
           </div>
           <div>
-            <label htmlFor="fecha-fin" className="form-label small">Fecha fin</label>
+            <label htmlFor="fecha-fin" className="form-label small">
+              Fecha fin
+            </label>
             <input
               id="fecha-fin"
               type="date"
@@ -177,7 +191,8 @@ export default function ClusterrPage() {
           </div>
           <div>
             <button
-              className="dashboard-btn-blue"
+              className="dashboard-btn-blue w-100 d-flex justify-content-center align-items-center"
+              style={{ height: "38px" }}
               onClick={handleApplyFilter}
               disabled={!pendingStartDate || !pendingEndDate}
             >
