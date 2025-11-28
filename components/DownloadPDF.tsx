@@ -8,10 +8,38 @@ type Grafico = {
   titulo_grafico: string;
   activo: number;
 };
+
 type Kpi = { id_kpi: number; label: string; value: string | number };
+
+type ApiGraph = {
+  id_grafico: number;
+  titulo_grafico?: string;
+  descripcion_relacion?: string;
+  variables?: string[];
+  visualizacion?: number | null;
+  activo?: number | null;
+};
+
+type ReportContext = {
+  tipoReporte: {
+    id_tipo_reporte: number;
+    nombre_tipo_reporte: string;
+    descripcion_tipo_reporte: string;
+  } | null;
+  dashboard: {
+    id_dashboard: number;
+    titulo_dashboard: string;
+    estado_dashboard: number | null;
+    fecha_creacion_dashboard: string | null;
+    descripcion_dashboard: string | null;
+  } | null;
+  graficos: ApiGraph[];
+};
 
 interface Props {
   date: string;
+  startDate?: string;
+  endDate?: string;
   kpis: Kpi[];
   graficos: Grafico[];
   chartNodeIds: Record<number, string>;
@@ -20,18 +48,18 @@ interface Props {
   dashboardId?: number;
 }
 
-// ðŸ§¾ Descripciones de cada grÃ¡fico
+// Descripciones base de cada grafico (fallback cuando no hay datos desde BD).
 const CAPTIONS: Record<number, string> = {
-  1: "Este gráfico compara las variaciones simultáneas de dióxido de carbono (CO₂) y temperatura ambiental, permitiendo analizar su correlación temporal. Un incremento conjunto puede indicar espacios cerrados con poca ventilación o mayor actividad metabólica y de ocupación. La divergencia entre ambas curvas evidencia posibles efectos meteorológicos o cambios en la densidad del aire que afectan la dispersión de gases.",
-  2: "Representa la concentración promedio diaria de material particulado (PM2.5) y la compara con el valor límite recomendado por la Organización Mundial de la Salud (OMS). Este gráfico permite evaluar el cumplimiento normativo y detectar episodios de contaminación puntual. Valores consistentemente por debajo del límite reflejan una atmósfera saludable, mientras que los sobrepasos reiterados advierten necesidad de medidas correctivas.",
-  3: "Este gráfico representa la proporción relativa de material particulado suspendido en el aire según su tamaño o tipo. Permite identificar cuál fracción de partículas (por ejemplo, PM1, PM2.5 o PM10) contribuye en mayor medida a la carga total de contaminación atmosférica. Un predominio de PM2.5 sugiere una presencia significativa de partículas finas, las más perjudiciales para la salud respiratoria.",
-  4: "Este gráfico analiza la relación entre la concentración de CO₂ y el consumo energético o de recursos durante el periodo monitoreado. Un aumento paralelo puede evidenciar mayor ocupación, uso intensivo de equipos o ventilación insuficiente. La correlación entre ambos indicadores es clave para optimizar eficiencia energética y calidad del aire interior.",
-  5: "Este gráfico resume patrones ambientales detectados a partir de los datos históricos de los sensores, identificando combinaciones típicas de temperatura, humedad, material particulado y otros parámetros. Permite distinguir comportamientos recurrentes de episodios atípicos y apoya la toma de decisiones para la gestión ambiental.",
-  6: "La serie temporal muestra la evolución de las concentraciones de dióxido de carbono (CO₂) durante el periodo seleccionado. Esta visualización permite detectar picos de emisión asociados a actividad humana o a condiciones de ventilación limitadas. Tendencias ascendentes sostenidas podrían indicar una acumulación de gases en zonas de baja circulación de aire.",
-  7: "Este gráfico refleja la variación diaria del material particulado fino (PM2.5). Permite observar patrones recurrentes, como incrementos durante horas punta o en condiciones meteorológicas adversas. La estabilidad en valores bajos sugiere un ambiente limpio y controlado, mientras que los picos abruptos advierten episodios de contaminación puntual.", //listo
-  8: "La gráfica muestra la dinámica térmica del entorno monitoreado, destacando las fluctuaciones diarias de temperatura. Las variaciones permiten correlacionar los cambios térmicos con los niveles de contaminación o con la ocurrencia de precipitaciones. Temperaturas estables indican condiciones atmosféricas homogéneas, mientras que amplitudes térmicas amplias reflejan influencia meteorológica significativa.",
-  9: "Indica la variación de la humedad del aire a lo largo del tiempo. Este parámetro influye directamente en la formación y comportamiento de las partículas suspendidas y en la sensación térmica. Niveles altos pueden favorecer la condensación y el aumento temporal de PM, mientras que valores bajos reflejan aire seco y mayor dispersión.",
-  10: "Este gráfico compara los valores medios de PM2.5 para cada día de la semana, evidenciando patrones de contaminación asociados a la actividad humana. Días laborales suelen mostrar concentraciones más altas debido al tránsito y actividad industrial, mientras que fines de semana tienden a valores más bajos. La comparación facilita la planificación de estrategias de mitigación según el comportamiento semanal.",
+  1: "Este grafico compara las variaciones simultaneas de CO2 y temperatura ambiental, permitiendo analizar su correlacion temporal y el impacto de la ventilacion.",
+  2: "Representa la concentracion promedio diaria de material particulado y la compara con el limite recomendado por la OMS. Permite evaluar cumplimiento normativo y episodios de contaminacion.",
+  3: "Muestra la proporcion relativa de material particulado suspendido en el aire segun su tamano. Ayuda a identificar la fraccion de particulas que mas contribuye a la carga total.",
+  4: "Analiza la relacion entre la concentracion de CO2 y el consumo energetico o de recursos durante el periodo monitoreado.",
+  5: "Resumen de patrones ambientales detectados a partir de los datos historicos de los sensores.",
+  6: "Serie temporal de las concentraciones de CO2 para detectar picos asociados a actividad humana o ventilacion limitada.",
+  7: "Variacion del material particulado fino (PM2.5) en el periodo seleccionado, destacando patrones recurrentes o picos puntuales.",
+  8: "Dinamica termica del entorno monitoreado, mostrando fluctuaciones de temperatura y su posible relacion con la calidad del aire.",
+  9: "Variacion de la humedad del aire a lo largo del tiempo y su influencia en el comportamiento de las particulas suspendidas.",
+  10: "Comparacion de valores medios de PM2.5 por dia de la semana para detectar patrones asociados a la actividad humana.",
 };
 
 const PAR_MARGIN_X = 60;
@@ -39,48 +67,533 @@ const PAR_LINE_HEIGHT = 16;
 const PAR_WIDTH = (doc: jsPDF) =>
   doc.internal.pageSize.getWidth() - PAR_MARGIN_X * 2;
 
-//FUNCION PARA PÃRRAFO JUSTIFICADO.
-function drawJustifiedParagraph(doc: jsPDF, text: string, yStart: number) {
-  const pageW = doc.internal.pageSize.getWidth();
-  const textWidth = PAR_WIDTH(doc);
-  const lines = doc.splitTextToSize(text, textWidth);
+const VARIABLE_LABELS: Record<string, string> = {
+  "mp1.0_ate": "Material particulado 1.0",
+  "mp2.5_ate": "Material particulado 2.5",
+  "mp10_ate": "Material particulado 10",
+  co2_mhz19: "Dioxido de Carbono",
+  timestamp_registro: "Fecha/hora registro",
+  tem_bme280: "Temperatura",
+  dia_semana: "Día de la semana",
+};
+
+const formatDate = (value?: string | null) => {
+  if (!value) return "-";
+  const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/;
+  let d: Date | null = null;
+  const match = value.match(dateOnly);
+  if (match) {
+    // Interpretar fecha sin hora como local para evitar desfase de zona horaria
+    const [_, y, m, day] = match;
+    d = new Date(Number(y), Number(m) - 1, Number(day));
+  } else {
+    d = new Date(value);
+  }
+
+  return d && !Number.isNaN(d.getTime())
+    ? d.toLocaleDateString("es-CL", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      })
+    : value;
+};
+
+function drawJustifiedParagraph(
+  doc: jsPDF,
+  text: string,
+  yStart: number,
+  xStart: number = PAR_MARGIN_X,
+  forcedWidth?: number
+) {
+  const textWidth =
+    forcedWidth ?? doc.internal.pageSize.getWidth() - xStart - PAR_MARGIN_X;
+  const paragraphs = text.split(/\n+/).map((p) => p.trim()).filter(Boolean);
 
   let y = yStart;
-  lines.forEach((line: any, i: any) => {
-    const isLast = i === lines.length - 1;
-    if (!isLast && line.includes(" ")) {
-      const words = line.trim().split(/\s+/);
-      const base = words.join(" ");
-      const baseW = doc.getTextWidth(base);
-      const gaps = words.length - 1;
-      const extra = gaps > 0 ? (textWidth - baseW) / gaps : 0;
+  paragraphs.forEach((para, pIdx) => {
+    const lines = doc.splitTextToSize(para, textWidth);
 
-      let x = PAR_MARGIN_X;
-      words.forEach((w: any, idx: any) => {
-        doc.text(w, x, y);
-        x += doc.getTextWidth(w) + (idx < gaps ? extra : 0);
-      });
-    } else {
-      doc.text(line, PAR_MARGIN_X, y);
+    lines.forEach((line: string, i: number) => {
+      const isLast = i === lines.length - 1;
+      const words = line.trim().split(/\s+/);
+      const hasGaps = words.length > 1;
+
+      if (!isLast && hasGaps) {
+        const gaps = words.length - 1;
+        const wordsWidth = words.reduce((acc, w) => acc + doc.getTextWidth(w), 0);
+        const spaceWidth = doc.getTextWidth(" ");
+        const remaining = textWidth - (wordsWidth + spaceWidth * gaps);
+        const gapSize =
+          remaining >= 0
+            ? spaceWidth + remaining / gaps
+            : spaceWidth; // evita superposicion si el texto es mas ancho
+
+        let x = xStart;
+        words.forEach((w, idx) => {
+          doc.text(w, x, y);
+          x += doc.getTextWidth(w) + (idx < gaps ? gapSize : 0);
+        });
+      } else {
+        doc.text(line, xStart, y);
+      }
+      y += PAR_LINE_HEIGHT;
+    });
+
+    if (pIdx < paragraphs.length - 1) {
+      y += PAR_LINE_HEIGHT * 0.05; // espacio casi nulo entre parrafos
     }
-    y += PAR_LINE_HEIGHT;
   });
 
   return y;
 }
 
-//FUNCIÃ“N PARA TÃTULO CENTRADO.
-function drawSectionTitle(doc: jsPDF, title: string, y: number) {
+function drawSectionTitle(
+  doc: jsPDF,
+  title: string,
+  y: number,
+  align: "left" | "center" = "left"
+) {
   const pageW = doc.internal.pageSize.getWidth();
+  const x = align === "center" ? pageW / 2 : PAR_MARGIN_X;
   doc.setFont("helvetica", "bold");
   doc.setFontSize(16);
-  doc.text(title, pageW / 2, y, { align: "center" });
+  doc.text(title, x, y, { align });
   doc.setFont("helvetica", "normal");
   doc.setFontSize(12);
 }
 
+const isGraphActive = (g?: ApiGraph) => {
+  const show = g?.visualizacion === undefined || Number(g.visualizacion) === 1;
+  const activeFlag = g?.activo === undefined || Number(g.activo) === 1;
+  return show && activeFlag;
+};
+
+const buildCaption = (id: number, graph?: ApiGraph) => {
+  const baseText =
+    graph?.descripcion_relacion?.trim() || CAPTIONS[id] || "Grafico del dashboard.";
+  const base = baseText.trim().endsWith(".") ? baseText.trim() : `${baseText.trim()}.`;
+
+  const vars = graph?.variables ?? [];
+  const varsFormatted = vars
+    .map((v) => VARIABLE_LABELS[v] || v)
+    .filter(Boolean);
+
+  let varsText = "";
+  if (varsFormatted.length === 1) {
+    varsText = `Variables utilizadas: ${varsFormatted[0]}.`;
+  } else if (varsFormatted.length === 2) {
+    varsText = `Variables utilizadas: ${varsFormatted[0]} y ${varsFormatted[1]}.`;
+  } else if (varsFormatted.length > 2) {
+    const last = varsFormatted[varsFormatted.length - 1];
+    const head = varsFormatted.slice(0, -1).join(", ");
+    varsText = `Variables utilizadas: ${head} y ${last}.`;
+  }
+
+  return [base, varsText].filter(Boolean).join("\n");
+};
+
+const buildGraphList = (
+  chartNodeIds: Record<number, string>,
+  ctx: ReportContext | null,
+  graficos: Grafico[]
+) => {
+  const ctxGraphs = ctx?.graficos ?? [];
+  const fallback = graficos ?? [];
+  const byIdCtx = new Map<number, ApiGraph>();
+  ctxGraphs.forEach((g) => byIdCtx.set(Number(g.id_grafico), g));
+
+  const candidates: ApiGraph[] =
+    ctxGraphs.length > 0
+      ? ctxGraphs
+      : fallback.map((g) => ({
+          id_grafico: Number(g.id_grafico),
+          titulo_grafico: g.titulo_grafico,
+          activo: g.activo,
+        }));
+
+  const result: Array<{
+    id: number;
+    selector: string;
+    title: string;
+    caption: string;
+  }> = [];
+
+  candidates.forEach((item) => {
+    const id = Number(item.id_grafico);
+    if (!Number.isFinite(id) || id === 5) return; // id 5 no se usa en este reporte
+    const selector = chartNodeIds[id];
+    if (!selector) return;
+
+    const info = byIdCtx.get(id) ?? item;
+    const isActive =
+      info?.visualizacion !== undefined || info?.activo !== undefined
+        ? isGraphActive(info)
+        : Number((item as any).activo ?? 1) === 1;
+    if (!isActive) return;
+
+    const title =
+      info?.titulo_grafico || (item as any).titulo_grafico || `Grafico ${id}`;
+    const caption = buildCaption(id, info);
+
+    result.push({ id, selector, title, caption });
+  });
+
+  return result.sort((a, b) => a.id - b.id);
+};
+
+const fetchReportContext = async (
+  reportTypeId?: number,
+  dashboardId?: number
+): Promise<ReportContext | null> => {
+  try {
+    const params = new URLSearchParams();
+    if (reportTypeId) params.set("reportTypeId", String(reportTypeId));
+    if (dashboardId) params.set("dashboardId", String(dashboardId));
+
+    const url =
+      params.toString().length > 0
+        ? `/api/reportes/pdf-data?${params.toString()}`
+        : "/api/reportes/pdf-data";
+
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) return null;
+    const json = await res.json();
+    if (!json?.success) return null;
+
+    const data = json.data as ReportContext;
+    return {
+      tipoReporte: data?.tipoReporte ?? null,
+      dashboard: data?.dashboard ?? null,
+      graficos: Array.isArray(data?.graficos) ? data.graficos : [],
+    };
+  } catch (error) {
+    console.warn("DownloadPDF: no se pudo obtener info del reporte", error);
+    return null;
+  }
+};
+
+const applyFooters = (doc: jsPDF) => {
+  const total = doc.getNumberOfPages();
+  for (let i = 1; i <= total; i++) {
+    doc.setPage(i);
+    const w = doc.internal.pageSize.getWidth();
+    const h = doc.internal.pageSize.getHeight();
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`EcoPulse - ${new Date().toLocaleString("es-CL")}`, 20, h - 16, {
+      align: "left",
+    });
+    doc.text(`Pagina ${i} / ${total}`, w - 40, h - 16, { align: "right" });
+  }
+};
+
+const addCover = (
+  doc: jsPDF,
+  date: string,
+  ctx: ReportContext | null,
+  startDate?: string,
+  endDate?: string
+) => {
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+
+  doc.setFillColor(230, 245, 255);
+  doc.rect(0, 0, pageW, pageH, "F");
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(28);
+  doc.setTextColor(25, 90, 140);
+  const reportTitle = "Resumen PDF EcoPulse";
+  const titleY = pageH / 2 - 120;
+  doc.text(reportTitle, pageW / 2, titleY, { align: "center" });
+
+  doc.setFontSize(24);
+  doc.text(
+    ctx?.dashboard?.titulo_dashboard || "Dashboard Ambiental",
+    pageW / 2,
+    titleY + 60,
+    { align: "center" }
+  );
+
+  doc.setDrawColor(25, 90, 140);
+  doc.setLineWidth(1.2);
+  doc.line(pageW / 2 - 80, titleY + 78, pageW / 2 + 80, titleY + 78);
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(12);
+  doc.setTextColor(0, 0, 0);
+  const rangeLabel =
+    startDate && endDate
+      ? `Rango seleccionado: ${formatDate(startDate)} a ${formatDate(endDate)}`
+      : `Fecha del reporte: ${formatDate(date)}`;
+
+  doc.text(rangeLabel, pageW / 2, titleY + 108, {
+    align: "center",
+  });
+};
+
+const addIntroduccion = (doc: jsPDF, ctx: ReportContext | null) => {
+  doc.addPage();
+  drawSectionTitle(doc, "Introducción", 60, "left");
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(12);
+
+  const introBlocks = [
+    (ctx?.tipoReporte?.descripcion_tipo_reporte?.trim() ||
+      "Reporte que muestra graficas y metricas de un dashboard") +
+      " orientado al monitoreo ambiental de la plataforma EcoPulse. Este documento entrega una vision clara y estructurada del estado actual de las variables atmosfericas medidas y de la forma en que se representan en los componentes visuales del sistema.",
+    "Las mediciones provienen de sensores instalados en distintas zonas de Santiago, Chile. Se registran en tiempo casi real variables como temperatura, humedad relativa, presion atmosferica, material particulado fino y otros parametros relevantes de calidad del aire. Estos datos se procesan para resaltar tendencias, identificar umbrales criticos y generar alertas, entregando contexto ejecutivo y operativo para la toma de decisiones.",
+    (ctx?.dashboard?.descripcion_dashboard?.trim() ||
+      "Configuracion inicial de graficos que se podrian visualizar en un dashboard") +
+      ". Se detalla que variables se incluyen en cada grafica, que filtros o rangos temporales se consideran y que tipo de visualizacion se utiliza (lineas, barras, indicadores, entre otros). Con ello se facilita la trazabilidad de KPIs y la coherencia entre la plataforma y este documento.",
+    "Finalmente, se describen los KPIs capturados desde la pagina de monitoreo y los graficos habilitados para el dashboard seleccionado. Cada visualizacion mantiene la configuracion activa en EcoPulse, asegurando consistencia con el monitoreo en linea. Esto favorece comparaciones entre periodos y soporta decisiones informadas sobre la calidad ambiental de la ciudad.",
+  ];
+
+  let y = 100;
+  introBlocks.forEach((txt) => {
+    y = drawJustifiedParagraph(doc, txt, y);
+    y += 10;
+  });
+};
+
+const drawDashboardSummary = (
+  doc: jsPDF,
+  ctx: ReportContext | null,
+  startY: number,
+  reportDate?: string,
+  endDate?: string
+) => {
+  if (!ctx?.dashboard) return startY;
+
+  const state =
+    Number(ctx.dashboard.estado_dashboard) === 1
+      ? "Activo"
+      : String(ctx.dashboard.estado_dashboard ?? "") || "Sin estado";
+  const requestDate = endDate || reportDate || new Date().toISOString();
+
+  let y = startY;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(12);
+  doc.text(`Dashboard: ${ctx.dashboard.titulo_dashboard}`, PAR_MARGIN_X, y);
+  y += PAR_LINE_HEIGHT;
+  doc.text(`Estado: ${state}`, PAR_MARGIN_X, y);
+  y += PAR_LINE_HEIGHT;
+  doc.text(`Fecha solicitud: ${formatDate(requestDate)}`, PAR_MARGIN_X, y);
+
+  if (ctx.dashboard.descripcion_dashboard) {
+    y += PAR_LINE_HEIGHT;
+    doc.text("Descripción:", PAR_MARGIN_X, y);
+    const desc = ctx.dashboard.descripcion_dashboard.trim();
+    const descWithDot =
+      desc.endsWith(".") || desc.endsWith("!") || desc.endsWith("?") ? desc : `${desc}.`;
+    y = drawJustifiedParagraph(doc, descWithDot, y + PAR_LINE_HEIGHT);
+  }
+
+  const activeGraphs = (ctx.graficos || [])
+    .filter((g) => Number(g.activo ?? 1) === 1 && isGraphActive(g))
+    .map((g) => g.titulo_grafico)
+    .filter(Boolean);
+  const graphsText =
+    activeGraphs.length > 0
+      ? "Graficos en el reporte:"
+      : "No hay graficos activos configurados para este dashboard.";
+
+  y += 12;
+  doc.text(graphsText, PAR_MARGIN_X, y);
+
+  if (activeGraphs.length > 0) {
+    y += PAR_LINE_HEIGHT;
+    activeGraphs.forEach((title) => {
+      doc.text(`- ${title}`, PAR_MARGIN_X + 10, y);
+      y += PAR_LINE_HEIGHT;
+    });
+  }
+
+  return y;
+};
+
+const addKpis = async (
+  doc: jsPDF,
+  kpiNodeId: string,
+  kpis: Kpi[],
+  startY: number
+) => {
+  const node = document.querySelector(kpiNodeId) as HTMLElement | null;
+  if (!node) return;
+
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+
+  const pm25 = kpis.find((k) => k.id_kpi === 1)?.value;
+  const temp = kpis.find((k) => k.id_kpi === 2)?.value;
+  const co2 = kpis.find((k) => k.id_kpi === 3)?.value;
+  const rain = kpis.find((k) => k.id_kpi === 4)?.value;
+
+  const items: string[] = [];
+  if (pm25 !== undefined) {
+    const ref = 130;
+    const pos = Number(pm25) <= ref ? "por debajo" : "por encima";
+    items.push(
+      `MP2.5 promedio: ${pm25} ug/m3, ${pos} del umbral OMS (${ref} ug/m3). Resume la carga de partículas finas en el período analizado y sirve para identificar posibles episodios de contaminación.`
+    );
+  }
+  if (temp !== undefined) {
+    items.push(
+      `Temperatura promedio: ${temp} C en el período evaluado. Ayuda a relacionar variaciones térmicas con el comportamiento de otros indicadores ambientales.`
+    );
+  }
+  if (co2 !== undefined) {
+    items.push(
+      `CO2 máximo registrado: ${co2} ppm en el período analizado. Permite detectar espacios con ventilación insuficiente o alta ocupación.`
+    );
+  }
+  if (rain !== undefined) {
+    items.push(
+      `Promedio de agua caída: ${rain} mm en el período seleccionado. Referencia útil para interpretar dispersión de partículas y eventos climáticos.`
+    );
+  }
+  if (items.length === 0) {
+    kpis.forEach((k) =>
+      items.push(
+        `${k.label}: ${k.value}. Indicador proveniente del panel de monitoreo activo.`
+      )
+    );
+  }
+
+  const cards = Array.from(
+    node.querySelectorAll(".Kpicard")
+  ) as HTMLElement[];
+
+  const cardMaxW = 220;
+  const gapY = 22;
+  let y = startY;
+
+  const drawCardRow = async (
+    cardEl: HTMLElement,
+    text: string,
+    isFirstRow: boolean
+  ) => {
+    if (!isFirstRow && y > pageH - 120) {
+      doc.addPage();
+      drawSectionTitle(doc, "KPIs Card del Dashboard (cont.)", 50);
+      y = 80;
+    }
+
+    cardEl.scrollIntoView({ block: "center" });
+    const canvas = await html2canvas(cardEl, { scale: 2, useCORS: true });
+    const ratio = Math.min(cardMaxW / canvas.width, 160 / canvas.height);
+    const drawW = canvas.width * ratio;
+    const drawH = canvas.height * ratio;
+    const imgX = PAR_MARGIN_X;
+    const imgY = y;
+    doc.addImage(canvas.toDataURL("image/png"), "PNG", imgX, imgY, drawW, drawH);
+
+    const textX = imgX + drawW + 18;
+    const textWidth = pageW - textX - PAR_MARGIN_X;
+    const textY = imgY + 12;
+    const endTextY = drawJustifiedParagraph(doc, text, textY, textX, textWidth);
+    const textHeight = endTextY - textY;
+
+    const rowHeight = Math.max(drawH, textHeight);
+    y += rowHeight + gapY;
+  };
+
+  // Emparejar cards y textos por orden; si no hay cards se cae al nodo completo.
+  if (cards.length === items.length && cards.length > 0) {
+    for (let i = 0; i < cards.length; i++) {
+      await drawCardRow(cards[i], items[i], i === 0);
+    }
+  } else {
+    // Fallback: una sola captura del contenedor + lista debajo
+    node.scrollIntoView({ block: "center" });
+    const canvas = await html2canvas(node, { scale: 2, useCORS: true });
+    const maxW = pageW - 80;
+    const ratio = Math.min(maxW / canvas.width, 200 / canvas.height);
+    const drawW = canvas.width * ratio;
+    const drawH = canvas.height * ratio;
+    const imgX = (pageW - drawW) / 2;
+    const imgY = y;
+    doc.addImage(canvas.toDataURL("image/png"), "PNG", imgX, imgY, drawW, drawH);
+    y = imgY + drawH + 14;
+    items.forEach((txt) => {
+      y = drawJustifiedParagraph(doc, txt, y);
+      y += 6;
+    });
+  }
+};
+
+const addDomImage = async (
+  doc: jsPDF,
+  selector: string,
+  title: string,
+  caption: string
+) => {
+  const node = document.querySelector(selector) as HTMLElement | null;
+  if (!node) return null;
+
+  node.scrollIntoView({ block: "center" });
+  const canvas = await html2canvas(node, { scale: 2, useCORS: true });
+  const img = canvas.toDataURL("image/png");
+  const imgProps = { width: canvas.width, height: canvas.height, data: img };
+  return imgProps;
+};
+
+const addCharts = async (
+  doc: jsPDF,
+  charts: Array<{ id: number; selector: string; title: string; caption: string }>
+) => {
+  if (charts.length === 0) return;
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+  const topOffset = 70;
+  const blockGap = 32;
+  const blockHeight = (pageH - topOffset * 2 - blockGap) / 2;
+
+  const drawBlock = (
+    chart: { title: string; caption: string },
+    imgData: { width: number; height: number; data: string } | null,
+    top: number
+  ) => {
+    drawSectionTitle(doc, chart.title, top + 10, "left");
+    const titleGap = 18;
+    const imgTop = top + titleGap + 16;
+    const maxW = pageW - 100;
+    const maxH = blockHeight * 0.6;
+    if (imgData) {
+      const ratio = Math.min(maxW / imgData.width, maxH / imgData.height);
+      const drawW = imgData.width * ratio;
+      const drawH = imgData.height * ratio;
+      const imgX = (pageW - drawW) / 2;
+      doc.addImage(imgData.data, "PNG", imgX, imgTop, drawW, drawH);
+      const textTop = imgTop + drawH + PAR_LINE_HEIGHT * 1.5; // mas espacio entre imagen y texto
+      drawJustifiedParagraph(doc, chart.caption, textTop, PAR_MARGIN_X);
+    } else {
+      doc.text("No se pudo capturar el grafico.", PAR_MARGIN_X, imgTop);
+    }
+  };
+
+  for (let i = 0; i < charts.length; i += 2) {
+    doc.addPage();
+    const first = charts[i];
+    const second = charts[i + 1];
+
+    const img1 = await addDomImage(doc, first.selector, first.title, first.caption);
+    drawBlock(first, img1, topOffset);
+
+    if (second) {
+      const img2 = await addDomImage(doc, second.selector, second.title, second.caption);
+      drawBlock(second, img2, topOffset + blockHeight + blockGap);
+    }
+  }
+};
+
 export default function DownloadPDF({
   date,
+  startDate,
+  endDate,
   kpis,
   graficos,
   chartNodeIds,
@@ -90,284 +603,49 @@ export default function DownloadPDF({
 }: Props) {
   const [busy, setBusy] = useState(false);
 
-  const addFooter = (doc: jsPDF, pageNum: number) => {
-    const w = doc.internal.pageSize.getWidth();
-    const h = doc.internal.pageSize.getHeight();
-    doc.setFontSize(9);
-    doc.text(`EcoPulse - ${new Date().toLocaleString("es-CL")}`, 20, h - 16, {
-      align: "left",
-    });
-    doc.text(`Pagina ${pageNum}`, w - 40, h - 16, { align: "right" });
-  };
-
-  //Portada
-  const addCover = (doc: jsPDF) => {
-    const pageW = doc.internal.pageSize.getWidth();
-    const pageH = doc.internal.pageSize.getHeight();
-
-    // Fondo suave
-    doc.setFillColor(230, 245, 255);
-    doc.rect(0, 0, pageW, pageH, "F");
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(28);
-    doc.setTextColor(25, 90, 140);
-    doc.text("Reporte Ambiental", pageW / 2, 200, { align: "center" });
-
-    doc.setFontSize(20);
-    doc.text("EcoPulse", pageW / 2, 230, { align: "center" });
-
-    // LÃ­nea decorativa
-    doc.setDrawColor(25, 90, 140);
-    doc.setLineWidth(1.2);
-    doc.line(pageW / 2 - 60, 245, pageW / 2 + 60, 245);
-
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(13);
-    doc.text(
-      `Fecha seleccionada: ${new Date(date).toLocaleDateString("es-CL")}`,
-      pageW / 2,
-      280,
-      { align: "center" }
-    );
-
-    doc.setFontSize(11);
-    doc.text(
-      "Sistema de monitoreo ambiental y analitica inteligente.",
-      pageW / 2,
-      300,
-      { align: "center" }
-    );
-
-    addFooter(doc, 1);
-  };
-
-  const addIntroduccion = (doc: jsPDF, pageNum: number) => {
-    doc.addPage();
-    const pageW = doc.internal.pageSize.getWidth();
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(18);
-    doc.text("Introduccion", pageW / 2, 60, { align: "center" });
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(12);
-
-    const intro =
-      "Este informe resume el estado ambiental monitoreado por la plataforma EcoPulse. Se presentan indicadores clave y tendencias obtenidas a partir de los sensores, junto con su comparacion respecto a valores de referencia.\n\nEl reporte se genera automaticamente e incluye KPIs y graficos que permiten visualizar la evolucion de las variables ambientales de interes. La informacion busca facilitar la interpretacion de los datos y apoyar la toma de decisiones.";
-    // Justificar manualmente el texto (como en Word)
-    const marginX = 60;
-    const lineHeight = 16;
-    const textWidth = pageW - marginX * 2;
-    const lines = doc.splitTextToSize(intro, textWidth);
-
-    let y = 100;
-    lines.forEach((txt: any, idx: any) => {
-      doc.text("-", PAR_MARGIN_X - 10, y);
-      y = drawJustifiedParagraph(doc, txt, y);
-      y += 6;
-    });
-
-    addFooter(doc, pageNum);
-  };
-
-  //KPIs
-  const addKpis = async (
-    doc: jsPDF,
-    kpiNodeId: string,
-    kpis: any[],
-    pageNum: number
-  ) => {
-    const node = document.querySelector(kpiNodeId) as HTMLElement | null;
-    if (!node) return;
-
-    // Captura del bloque de KPIs
-    node.scrollIntoView({ block: "center" });
-    const canvas = await html2canvas(node, { scale: 2, useCORS: true });
-    const img = canvas.toDataURL("image/png");
-
-    const pageW = doc.internal.pageSize.getWidth();
-    const pageH = doc.internal.pageSize.getHeight();
-    const footerSpace = 40;
-
-    // 1) Preparamos los textos (descripciones) y estimamos su altura total
-    const pm25 = kpis.find((k) => k.id_kpi === 1)?.value;
-    const temp = kpis.find((k) => k.id_kpi === 2)?.value;
-    const co2 = kpis.find((k) => k.id_kpi === 3)?.value;
-    const rain = kpis.find((k) => k.id_kpi === 4)?.value;
-
-    const items: string[] = [];
-    if (pm25 !== undefined) {
-      const ref = 130;
-      const pos = Number(pm25) <= ref ? "por debajo" : "por encima";
-      items.push(
-        `MP2.5 promedio(día o rango seleccionado) (ug/m3): indicador de material particulado fino (<= 2.5 um). Al momento de la generacion del informe, el promedio fue ${pm25} ug/m3, ubicandose ${pos} del umbral OMS (${ref} ug/m3). ` +
-          `Al momento de la generacion del informe, el promedio fue ${pm25}ug/m3, ` +
-          `ubicandose ${pos} del umbral OMS (${ref}ug/m3).`
-      );
-    }
-    if (temp !== undefined) {
-      items.push(
-        `Temperatura promedio (C) (dia o rango seleccionado): describe las condiciones termicas predominantes del periodo. El valor observado es ${temp} C. ` +
-          `El valor observado es ${temp}°C.`
-      );
-    }
-    if (co2 !== undefined) {
-      items.push(
-        `CO2 promedio(ppm) (dia o rango seleccionado): mayor concentracion puntual registrada por los sensores durante el intervalo. El valor alcanzo ${co2} ppm. `
-      );
-    }
-    if (rain !== undefined) {
-      items.push(
-        `Precipitacion acumulada(mm) (dia o rango seleccionado): total de agua caida en el periodo de analisis. Se registro ${rain} mm. ` +
-          `Se registro ${rain} mm.`
-      );
-    }
-    if (items.length === 0) {
-      kpis.forEach((k) => items.push(`${k.label}: ${k.value}.`));
-    }
-
-    // Estimar altura total del texto para reservar espacio antes de calcular el tamaÃ±o de la imagen
-    const textWidth = PAR_WIDTH(doc);
-    const bulletGap = 6;
-    let estimatedTextHeight = 0;
-    items.forEach((txt) => {
-      const wrapped = doc.splitTextToSize(txt, textWidth);
-      const linesCount = wrapped.length;
-      estimatedTextHeight += linesCount * PAR_LINE_HEIGHT + bulletGap;
-    });
-    if (estimatedTextHeight > 0) {
-      estimatedTextHeight -= bulletGap; // quitar el gap del Ãºltimo bullet
-    }
-
-    // 2) Pintamos la pÃ¡gina: tÃ­tulo â†’ imagen (arriba) â†’ texto (debajo)
-    doc.addPage();
-    drawSectionTitle(doc, "KPIs del Dashboard", 50);
-
-    const titleGap = 20;
-    const imgTop = 50 + titleGap; // debajo del tÃ­tulo
-    const textTopGap = 18; // espacio entre imagen y texto
-
-    // Calcular tamaÃ±o mÃ¡ximo permitido para la imagen para que quepa tambiÃ©n el texto y el footer
-    const maxW = pageW - 80;
-    const maxH =
-      pageH - imgTop - textTopGap - estimatedTextHeight - footerSpace;
-
-    // Si el texto es muy largo, maxH podrÃ­a ser pequeÃ±o; aseguramos un mÃ­nimo visual
-    const safeMaxH = Math.max(120, maxH);
-
-    const ratio = Math.min(maxW / canvas.width, safeMaxH / canvas.height);
-    const drawW = canvas.width * ratio;
-    const drawH = canvas.height * ratio;
-    const imgX = (pageW - drawW) / 2;
-    const imgY = imgTop;
-
-    // Dibuja imagen primero
-    doc.addImage(img, "PNG", imgX, imgY, drawW, drawH);
-
-    // 3) Descripciones justificadas, DEBAJO de la imagen
-    let y = imgY + drawH + textTopGap;
-    items.forEach((txt) => {
-      // bullet
-      doc.text("-", PAR_MARGIN_X - 10, y);
-      y = drawJustifiedParagraph(doc, txt, y);
-      y += bulletGap;
-    });
-    addFooter(doc, pageNum);
-  };
-
-  //GRAFICOS
-  const addDomImage = async (
-    doc: jsPDF,
-    selector: string,
-    title: string,
-    caption: string,
-    pageNum: number
-  ) => {
-    const node = document.querySelector(selector) as HTMLElement | null;
-    if (!node) return;
-
-    node.scrollIntoView({ block: "center" });
-    const canvas = await html2canvas(node, { scale: 2, useCORS: true });
-    const img = canvas.toDataURL("image/png");
-
-    const pageW = doc.internal.pageSize.getWidth();
-    const pageH = doc.internal.pageSize.getHeight();
-    const footerSpace = 40;
-
-    doc.addPage();
-    drawSectionTitle(doc, title, 40);
-
-    const maxW = pageW - 100;
-    const maxH = pageH - 180;
-    const imgW = canvas.width;
-    const imgH = canvas.height;
-    const ratio = Math.min(maxW / imgW, maxH / imgH);
-    const drawW = imgW * ratio;
-    const drawH = imgH * ratio;
-    const imgX = (pageW - drawW) / 2;
-    const imgY = 60;
-    doc.addImage(img, "PNG", imgX, imgY, drawW, drawH);
-
-    if (caption) {
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(12);
-      const yCaption = imgY + drawH + 18;
-
-      const yEndLimit = pageH - footerSpace - 10;
-      let y = drawJustifiedParagraph(doc, caption, yCaption);
-
-      if (y > yEndLimit) {
-        const remaining = caption;
-        doc.addPage();
-        drawSectionTitle(doc, "ContinuaciÃ³n", 40);
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(12);
-        y = drawJustifiedParagraph(doc, remaining, 70);
-      }
-    }
-
-    addFooter(doc, pageNum);
-  };
-
   const handleExport = async () => {
     if (busy) return;
     setBusy(true);
     try {
       const doc = new jsPDF({ unit: "pt", format: "a4" });
+      const ctx = await fetchReportContext(reportTypeId, dashboardId);
 
-      // Portada
-      addCover(doc);
+      addCover(doc, date, ctx, startDate, endDate);
+      addIntroduccion(doc, ctx);
+      // Resumen + KPIs en una sola pagina
+      doc.addPage();
+      drawSectionTitle(doc, "Resumen del dashboard", 50);
+      let nextY = drawDashboardSummary(doc, ctx, 90, date, endDate);
+      nextY += 24;
+      drawSectionTitle(doc, "KPIs Card del Dashboard", nextY);
+      await addKpis(doc, kpiNodeId, kpis, nextY + 20);
 
-      let pageNum = 2;
+      const charts = buildGraphList(chartNodeIds, ctx, graficos);
+      await addCharts(doc, charts);
 
-      // Introduccion
-      addIntroduccion(doc, pageNum++);
+      applyFooters(doc);
 
-      // KPIs
-      await addKpis(doc, kpiNodeId, kpis, pageNum++);
+      const parsed = new Date(date);
+      const isoDate = Number.isNaN(parsed.getTime())
+        ? new Date().toISOString().slice(0, 10)
+        : parsed.toISOString().slice(0, 10);
+      const reportName =
+        ctx?.dashboard?.titulo_dashboard &&
+        ctx.dashboard.titulo_dashboard.trim() !== ""
+          ? `EcoPulse_${ctx.dashboard.titulo_dashboard}_${isoDate}.pdf`
+          : `EcoPulse_${isoDate}.pdf`;
 
-      // GrÃ¡ficos activos
-      const activos = graficos
-        .filter((g) => Number(g.activo) === 1)
-        .sort((a, b) => Number(a.id_grafico) - Number(b.id_grafico));
+      doc.save(reportName);
 
-      for (const g of activos) {
-        const nodeSel = chartNodeIds[Number(g.id_grafico)];
-        const caption = CAPTIONS[Number(g.id_grafico)] || "";
-        if (nodeSel) {
-          await addDomImage(doc, nodeSel, g.titulo_grafico, caption, pageNum++);
-        }
-      }
-
-      const name = `EcoPulse_${new Date(date).toISOString().slice(0, 10)}.pdf`;
-      doc.save(name);
-
-      // Registrar reporte PDF generado
       try {
-        const payload: { id_tipo_reporte: number; id_dashboard?: number } = {
+        const payload: {
+          id_tipo_reporte: number;
+          id_dashboard?: number;
+          titulo_reporte?: string;
+        } = {
           id_tipo_reporte: reportTypeId ?? 1,
+          titulo_reporte:
+            ctx?.dashboard?.titulo_dashboard || reportName.replace(".pdf", ""),
         };
         if (typeof dashboardId === "number") {
           payload.id_dashboard = dashboardId;
