@@ -80,8 +80,6 @@ const DashboardPage: NextPage = () => {
     return `${yyyy}-${mm}-${dd}`;
   })();
 
-  
-
   //Carga visibilidad de los graficos desde el servidor
   useEffect(() => {
     (async () => {
@@ -240,7 +238,10 @@ const DashboardPage: NextPage = () => {
       setLoading(true);
       setError(null);
       try {
-        const params = new URLSearchParams({ start: appliedStartDate, end: appliedEndDate });
+        const params = new URLSearchParams({
+          start: appliedStartDate,
+          end: appliedEndDate,
+        });
         const res = await fetch(`/api/dashboard-data?${params.toString()}`, {
           cache: "no-store",
         });
@@ -262,7 +263,10 @@ const DashboardPage: NextPage = () => {
 
     const intervalID = setInterval(async () => {
       try {
-        const params = new URLSearchParams({ start: appliedStartDate, end: appliedEndDate });
+        const params = new URLSearchParams({
+          start: appliedStartDate,
+          end: appliedEndDate,
+        });
         const res = await fetch(`/api/dashboard-data?${params.toString()}`, {
           cache: "no-store",
         });
@@ -348,7 +352,9 @@ const DashboardPage: NextPage = () => {
       {/* Selector de rango de fechas y botón de filtrado */}
       <div className="mb-4 d-flex gap-2 align-items-end flex-wrap">
         <div className="filter-control-wrapper">
-          <label htmlFor="fecha-inicio" className="form-label small">Fecha inicio</label>
+          <label htmlFor="fecha-inicio" className="form-label small">
+            Fecha inicio
+          </label>
           <input
             id="fecha-inicio"
             type="date"
@@ -360,7 +366,9 @@ const DashboardPage: NextPage = () => {
           />
         </div>
         <div className="filter-control-wrapper">
-          <label htmlFor="fecha-fin" className="form-label small">Fecha fin</label>
+          <label htmlFor="fecha-fin" className="form-label small">
+            Fecha fin
+          </label>
           <input
             id="fecha-fin"
             type="date"
@@ -375,7 +383,8 @@ const DashboardPage: NextPage = () => {
           {/* Label vacío para alinear alturas con los date pickers */}
           <label className="form-label small d-block">&nbsp;</label>
           <button
-            className="dashboard-btn-blue w-100"
+            className="dashboard-btn-blue w-100 d-flex justify-content-center align-items-center"
+            style={{ height: "38px" }}
             onClick={handleApplyFilter}
             disabled={!pendingStartDate || !pendingEndDate}
           >
@@ -422,7 +431,10 @@ const DashboardPage: NextPage = () => {
           <div className="row g-3">
             {chartVisibility.PM25WeekdayBarChart && (
               <div className="col-12 col-lg-6">
-                <div id="chart-pm25weekday" className="dashboard-chart-container">
+                <div
+                  id="chart-pm25weekday"
+                  className="dashboard-chart-container"
+                >
                   <PM25WeekdayBarChart
                     data={data.timeseries}
                     title="MP 2.5 por día de semana (Promedio)"
@@ -567,8 +579,12 @@ const DashboardPage: NextPage = () => {
 
           {/* Si no es admin, mostrar botones de descarga. */}
           {!isAdmin && (
-          <div className="mb-4 d-flex gap-3 flex-wrap">
-              <DownloadButton label="Extraer reporte CSV" start={appliedStartDate} end={appliedEndDate} />
+            <div className="mb-4 d-flex gap-3 flex-wrap">
+              <DownloadButton
+                label="Extraer reporte CSV"
+                start={appliedStartDate}
+                end={appliedEndDate}
+              />
               <DownloadPDF
                 date={selectedDate}
                 startDate={appliedStartDate}
@@ -576,14 +592,14 @@ const DashboardPage: NextPage = () => {
                 kpis={kpisForPdf}
                 graficos={graficos}
                 chartNodeIds={{
-                  1: "#chart-line",         // Relación CO2 vs Temperatura
-                  2: "#chart-bar",          // PM promedio vs límite OMS
-                  3: "#chart-pie",          // Distribución porcentual MP
-                  4: "#chart-area",         // CO2 vs Consumo
-                  6: "#chart-co2ts",        // Serie temporal CO₂
-                  7: "#chart-pm25ts",       // Serie temporal PM2.5
-                  8: "#chart-temp",         // Serie temporal Temperatura
-                  9: "#chart-hum",          // Serie temporal Humedad
+                  1: "#chart-line", // Relación CO2 vs Temperatura
+                  2: "#chart-bar", // PM promedio vs límite OMS
+                  3: "#chart-pie", // Distribución porcentual MP
+                  4: "#chart-area", // CO2 vs Consumo
+                  6: "#chart-co2ts", // Serie temporal CO₂
+                  7: "#chart-pm25ts", // Serie temporal PM2.5
+                  8: "#chart-temp", // Serie temporal Temperatura
+                  9: "#chart-hum", // Serie temporal Humedad
                   10: "#chart-pm25weekday", // PM2.5 promedio por día de semana
                 }}
                 kpiNodeId="#kpis-dashboard"
@@ -629,8 +645,3 @@ const DashboardPage: NextPage = () => {
 };
 
 export default DashboardPage;
-
-
-
-
-

@@ -57,6 +57,7 @@ jobs:
             echo "DB_NAME: \"${{ secrets.DB_NAME }}\""
             echo "JWT_SECRET: \"${{ secrets.JWT_SECRET }}\""
             echo "APIKEY: \"${{ secrets.APIKEY }}\""
+            echo "DB_SSL: \"${{ secrets.DB_SSL }}\""
           } >> .env.deploy
 
       - name: Deploy to Cloud Run
