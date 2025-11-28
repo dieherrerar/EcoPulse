@@ -75,7 +75,7 @@ export async function GET(req: NextRequest) {
     const avgTemp = avgOf("tem_bme280");
     const maxCO2 = maxOf("co2_mhz19");
     const avgCO2 = avgOf("co2_mhz19");
-    const aguaCaida = sumOf("agua_caida");
+    const aguaCaida = avgOf("agua_caida");
 
     const totalConsumo = (() => {
       let sum = 0;

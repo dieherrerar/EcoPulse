@@ -314,7 +314,7 @@ const DashboardPage: NextPage = () => {
     { id_kpi: 3, label: "CO₂ máximo", value: kpis?.maxCO2 ?? "-" },
     {
       id_kpi: 4,
-      label: "Precipitación acumulada",
+      label: "Promedio de agua caida",
       value: kpis?.aguaCaida ?? "-",
     },
   ];
@@ -410,11 +410,11 @@ const DashboardPage: NextPage = () => {
               />
             </div>
             <div className="col-6 col-md-3">
-              <KpiCard
-                title="Precipitación acumulada"
-                value={kpis?.aguaCaida ?? "-"}
-                inlineUnit="mm"
-              />
+                <KpiCard
+                  title="Promedio de agua caida"
+                  value={kpis?.aguaCaida ?? "-"}
+                  inlineUnit="mm"
+                />
             </div>
           </div>
 
@@ -571,6 +571,8 @@ const DashboardPage: NextPage = () => {
               <DownloadButton label="Extraer reporte CSV" start={appliedStartDate} end={appliedEndDate} />
               <DownloadPDF
                 date={selectedDate}
+                startDate={appliedStartDate}
+                endDate={appliedEndDate}
                 kpis={kpisForPdf}
                 graficos={graficos}
                 chartNodeIds={{
