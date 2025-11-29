@@ -581,7 +581,7 @@ const DashboardPage: NextPage = () => {
           {!isAdmin && (
             <div className="mb-4 d-flex gap-3 flex-wrap">
               <DownloadButton
-                label="Extraer reporte CSV"
+                label="Exportar CSV"
                 start={appliedStartDate}
                 end={appliedEndDate}
               />
