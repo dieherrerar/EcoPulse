@@ -43,9 +43,17 @@ export default function Cluster3D(props: Cluster3DProps) {
   const { points, centroids, features, title, xKey, yKey, zKey, sizeKey } =
     props;
 
+  const labelMap: Record<string, string> = {
+    Tem_BME280: "Temperatura",
+    "MP1.0_AtE": "Material Particulado 1.0",
+  };
+
   const X = xKey ?? features[0];
   const Y = yKey ?? features[1];
   const Z = zKey ?? features[2];
+  const xLabel = labelMap[X] ?? X;
+  const yLabel = labelMap[Y] ?? Y;
+  const zLabel = labelMap[Z] ?? Z;
 
   const toNum = (v: any) =>
     typeof v === "string" ? parseFloat(v as any) : (v as number);
@@ -83,9 +91,9 @@ export default function Cluster3D(props: Cluster3DProps) {
         symbol: "circle",
       },
       hovertemplate:
-        `${X}: %{x:.2f}<br>` +
-        `${Y}: %{y:.2f}<br>` +
-        `${Z}: %{z:.2f}<br>` +
+        `${xLabel}: %{x:.2f}<br>` +
+        `${yLabel}: %{y:.2f}<br>` +
+        `${zLabel}: %{z:.2f}<br>` +
         `cluster: ${c}<extra></extra>`,
     };
   });
@@ -100,9 +108,9 @@ export default function Cluster3D(props: Cluster3DProps) {
           height: 520,
           margin: { l: 0, r: 0, b: 40, t: 10 },
           scene: {
-            xaxis: { title: { text: X } },
-            yaxis: { title: { text: Y } },
-            zaxis: { title: { text: Z } },
+            xaxis: { title: { text: xLabel } },
+            yaxis: { title: { text: yLabel } },
+            zaxis: { title: { text: zLabel } },
             aspectmode: "cube",
           },
           legend: { orientation: "h", x: 0.5, xanchor: "center", y: -0.05 },
